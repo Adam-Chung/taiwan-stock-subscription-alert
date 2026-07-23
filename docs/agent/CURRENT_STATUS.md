@@ -46,10 +46,14 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
   `public-offering-proxy`, and real delivery enabled.
 - Privacy-safe delivery history confirms alias `001` received the 2026-07-22
   message at 2026-07-23T08:25:14.039Z.
+- Offerings with discount above 20% now remain reportable when total new shares
+  or issued common shares are missing, with a `price-only` classification.
+- Missing previous close no longer blocks price evaluation; it only makes daily
+  change unavailable.
 
 ## Evidence
 
-- `npm run check`: 5 test files and 12 tests passed.
+- `npm run check`: 5 test files and 15 tests passed for the new fallback rules.
 - Live official endpoints returned HTTP 200 and expected fields on 2026-07-23.
 - `npm run dry-run`: successful no-offering heartbeat produced.
 - `git diff --check`: passed.
@@ -58,14 +62,14 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 ## Blockers and Risks
 
 - Complete issuance share counts are not exposed directly by the inspected
-  official OpenAPI endpoints. Strict recommendations require a sourced override.
+  official OpenAPI endpoints. Such stocks are reported as price-only unless a
+  sourced override enables complete safety-margin evaluation.
 - Real LINE delivery and GitHub schedule activation require user-owned LINE
   Secrets.
 
 ## Next Action
 
-Keep scheduled execution in current-date strict mode and obtain complete issuance
-share data for future recommendations where practical.
+Commit and push the verified incomplete-data fallback behavior.
 
 ## Loop Controls
 

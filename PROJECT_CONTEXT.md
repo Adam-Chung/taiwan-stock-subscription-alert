@@ -22,6 +22,11 @@ the configured safety-margin result.
 - Discount minus issuance-scale percentage must be greater than 10 percentage
   points.
 - Do not represent public-subscription shares as the complete issuance dilution.
+- If underwriting price and a usable market price produce discount above 20%,
+  report the stock even when total new shares or issued common shares are
+  unavailable. Label it as price-qualified with issuance data missing.
+- Missing previous close only suppresses daily-change calculation. Missing both
+  traded price and previous close makes the offering unevaluable.
 
 ## Current Technical Decisions
 

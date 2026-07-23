@@ -41,17 +41,53 @@ describe("evaluateOffering", () => {
     expect(result.dailyChangePercent).toBeCloseTo(5.2632);
     expect(result.scalePercent).toBeCloseTo(10);
     expect(result.safetyMarginPercent).toBeCloseTo(30);
+    expect(result.recommendationKind).toBe("complete");
     expect(result.recommended).toBe(true);
   });
 
-  it("strict 模式缺少完整新增股數時拒絕評估", () => {
-    expect(() =>
-      evaluateOffering(offering, quote, capital, undefined, {
+  it("strict 模式缺少完整新增股數時仍回報價差符合", () => {
+    const result = evaluateOffering(offering, quote, capital, undefined, {
+      minDiscountPercent: 20,
+      minSafetyMarginPercent: 10,
+      dilutionPolicy: "strict",
+    });
+    expect(result.recommendationKind).toBe("price-only");
+    expect(result.recommended).toBe(true);
+    expect(result.scalePercent).toBeUndefined();
+    expect(result.safetyMarginPercent).toBeUndefined();
+    expect(result.warning).toContain("缺少整次新增發行股數");
+  });
+
+  it("缺少已發行普通股數時仍回報價差符合", () => {
+    const result = evaluateOffering(
+      offering,
+      quote,
+      undefined,
+      { totalNewShares: 10_000, sourceUrl: "https://example.test" },
+      {
         minDiscountPercent: 20,
         minSafetyMarginPercent: 10,
         dilutionPolicy: "strict",
-      }),
-    ).toThrow("缺少整次新增發行股數");
+      },
+    );
+    expect(result.recommendationKind).toBe("price-only");
+    expect(result.warning).toContain("缺少已發行普通股數");
+  });
+
+  it("缺少前收仍可依目前股價評估，但不計算漲跌幅", () => {
+    const result = evaluateOffering(
+      offering,
+      { ...quote, previousClose: undefined },
+      capital,
+      { totalNewShares: 10_000, sourceUrl: "https://example.test" },
+      {
+        minDiscountPercent: 20,
+        minSafetyMarginPercent: 10,
+        dilutionPolicy: "strict",
+      },
+    );
+    expect(result.recommendationKind).toBe("complete");
+    expect(result.dailyChangePercent).toBeUndefined();
   });
 
   it("proxy 模式清楚標示公開申購規模比只是下限", () => {

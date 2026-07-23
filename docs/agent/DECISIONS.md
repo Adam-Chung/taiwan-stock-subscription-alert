@@ -48,3 +48,18 @@
 - Consequences: GitHub Actions must explicitly inject every Repository Secret;
   five slots are included initially.
 - Supersedes: single `LINE_TARGET_ID`
+
+## DEC-005: Report price-qualified offerings with incomplete issuance data
+
+- Date: 2026-07-23
+- Status: accepted
+- Context: Missing issuance or capital data should not hide a large underwriting
+  discount.
+- Decision: When underwriting price and usable market price establish discount
+  above 20%, report the offering as `price-only` if dilution cannot be computed.
+  Missing previous close only disables daily-change output.
+- Reason: Price evidence remains useful while the message can explicitly avoid
+  claiming that the safety-margin rule was verified.
+- Consequences: LINE distinguishes `complete` from `price-only`; missing
+  underwriting price or all usable market prices still fails evaluation.
+- Supersedes: DEC-002 strict exclusion behavior

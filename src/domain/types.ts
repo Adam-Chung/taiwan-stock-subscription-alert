@@ -16,7 +16,7 @@ export interface Quote {
   name: string;
   market: Market;
   currentPrice: number;
-  previousClose: number;
+  previousClose?: number;
   quotedAt: string;
   usedPreviousClose: boolean;
 }
@@ -36,11 +36,12 @@ export interface Evaluation {
   quote: Quote;
   discountPercent: number;
   returnOnCostPercent: number;
-  dailyChangeAmount: number;
-  dailyChangePercent: number;
-  scalePercent: number;
-  scaleKind: "dilution" | "public-offering-proxy";
-  safetyMarginPercent: number;
+  dailyChangeAmount?: number;
+  dailyChangePercent?: number;
+  scalePercent?: number;
+  scaleKind?: "dilution" | "public-offering-proxy";
+  safetyMarginPercent?: number;
+  recommendationKind: "complete" | "price-only" | "none";
   recommended: boolean;
   warning?: string;
 }

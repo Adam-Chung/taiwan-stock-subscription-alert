@@ -7,6 +7,12 @@ export function buildSuccessMessage(
   failures: EvaluationFailure[],
 ): string {
   const recommended = evaluated.filter((item) => item.recommended);
+  const complete = recommended.filter(
+    (item) => item.recommendationKind === "complete",
+  );
+  const priceOnly = recommended.filter(
+    (item) => item.recommendationKind === "price-only",
+  );
   const header = [
     `【台股申購提醒｜${date}】`,
     "",
@@ -14,6 +20,8 @@ export function buildSuccessMessage(
     `今日申購截止案件：${evaluated.length + failures.length} 檔`,
     `完成評估：${evaluated.length} 檔`,
     `符合條件：${recommended.length} 檔`,
+    `完整符合：${complete.length} 檔`,
+    `價差符合、發行資料不足：${priceOnly.length} 檔`,
   ];
 
   if (recommended.length === 0) {
@@ -25,21 +33,43 @@ export function buildSuccessMessage(
       header.push(
         "",
         `${item.offering.code} ${item.offering.name}`,
+        `判定：${
+          item.recommendationKind === "complete"
+            ? "完整符合"
+            : "價差符合，但發行資料不足"
+        }`,
         "申購截止：今天",
         `價格時間：${item.quote.quotedAt || "未提供"}`,
         `目前股價：${formatMoney(item.quote.currentPrice)} 元${
           item.quote.usedPreviousClose ? "（今日尚無成交，使用前收）" : ""
         }`,
-        `前一交易日收盤價：${formatMoney(item.quote.previousClose)} 元`,
-        `今日漲跌：${signed(item.dailyChangeAmount)} 元（${formatPercent(
-          item.dailyChangePercent,
-        )}）`,
+        `前一交易日收盤價：${
+          item.quote.previousClose === undefined
+            ? "資料不足"
+            : `${formatMoney(item.quote.previousClose)} 元`
+        }`,
+        `今日漲跌：${
+          item.dailyChangeAmount === undefined ||
+          item.dailyChangePercent === undefined
+            ? "無法計算"
+            : `${signed(item.dailyChangeAmount)} 元（${formatPercent(
+                item.dailyChangePercent,
+              )}）`
+        }`,
         `實際承銷價：${formatMoney(item.offering.actualUnderwritingPrice)} 元`,
         `市價折價率：${formatPercent(item.discountPercent)}`,
         `承銷價帳面報酬率：${formatPercent(item.returnOnCostPercent)}`,
         `實際公開承銷股數：${formatInteger(item.offering.actualUnderwritingShares)} 股`,
-        `${scaleLabel}：${formatPercent(item.scalePercent)}`,
-        `安全邊際：${formatPercent(item.safetyMarginPercent)} 個百分點`,
+        `${scaleLabel}：${
+          item.scalePercent === undefined
+            ? "無法計算"
+            : formatPercent(item.scalePercent)
+        }`,
+        `安全邊際：${
+          item.safetyMarginPercent === undefined
+            ? "無法計算"
+            : `${formatPercent(item.safetyMarginPercent)} 個百分點`
+        }`,
         ...(item.warning ? [`注意：${item.warning}`] : []),
         `公告資訊：https://goodinfo.tw/tw/StockAnnounceList.asp?STOCK_ID=${encodeURIComponent(
           item.offering.code,

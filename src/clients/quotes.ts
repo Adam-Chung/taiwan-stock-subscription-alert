@@ -28,19 +28,19 @@ async function fetchMisQuote(code: string, market: Market): Promise<Quote | unde
     `ex_ch=${exchange}_${encodeURIComponent(code)}.tw&json=1&delay=0`;
   const response = await fetchJson<MisResponse>(url);
   const item = response.msgArray?.[0];
-  if (!item?.c || !item.y) return undefined;
+  if (!item?.c) return undefined;
 
   const previousClose = parsePrice(item.y);
   const tradedPrice = parsePrice(item.z);
   const currentPrice = Number.isFinite(tradedPrice) ? tradedPrice : previousClose;
-  if (!Number.isFinite(currentPrice) || !Number.isFinite(previousClose)) return undefined;
+  if (!Number.isFinite(currentPrice)) return undefined;
 
   return {
     code: item.c,
     name: item.n || code,
     market,
     currentPrice,
-    previousClose,
+    ...(Number.isFinite(previousClose) ? { previousClose } : {}),
     quotedAt: `${item.d ?? ""} ${item.t ?? ""}`.trim(),
     usedPreviousClose: !Number.isFinite(tradedPrice),
   };

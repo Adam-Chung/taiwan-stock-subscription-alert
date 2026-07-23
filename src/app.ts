@@ -35,10 +35,8 @@ export async function run(date: string, dryRun: boolean): Promise<string> {
         if (!Number.isFinite(offering.actualUnderwritingPrice)) {
           throw new Error("實際承銷價尚未確定");
         }
-        const [quote, capital] = await Promise.all([
-          fetchQuote(offering),
-          fetchCapitalInfo(offering.code),
-        ]);
+        const quote = await fetchQuote(offering);
+        const capital = await fetchCapitalInfo(offering.code).catch(() => undefined);
         evaluated.push(
           evaluateOffering(offering, quote, capital, overrides[offering.code], policy),
         );
