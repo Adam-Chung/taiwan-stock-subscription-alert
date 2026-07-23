@@ -69,6 +69,10 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 - GitHub Actions Run #4 completed successfully and delivered the forced
   2026-07-15 zero-qualifier heartbeat to alias `001`; privacy-safe history records
   delivery at 2026-07-23T09:18:46.046Z.
+- The 2026-05-29 strict dry run evaluated two offerings; 8033 and 6182 were
+  price-qualified but explicitly marked as missing complete issuance data.
+- GitHub Actions Run #6 delivered the forced 2026-05-29 alert to alias `001`;
+  privacy-safe history records delivery at 2026-07-23T09:27:01.951Z.
 
 ## Evidence
 
