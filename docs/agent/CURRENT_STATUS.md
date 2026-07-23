@@ -1,0 +1,58 @@
+# Current Status
+
+Last updated: 2026-07-23 16:03 Asia/Taipei
+
+## Current Objective
+
+Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
+
+## Current State
+
+- Phase: record
+- Active task: TASK-006
+- Owner: primary agent
+
+## Confirmed Progress
+
+- Official TWSE public-subscription JSON, MIS quote fields, TWSE company capital
+  data, and TPEx quote data were live-checked.
+- TypeScript project, domain calculations, official-data clients, LINE client,
+  message formatting, and daily delivery marker are implemented.
+- Current price, previous close, price change, and daily change percentage are
+  included in the output.
+- Strict and explicitly labelled proxy issuance policies are implemented.
+- Initial TypeScript build and seven tests pass.
+- GitHub workflow, duplicate-safe persisted delivery marker, project context,
+  state documentation, and README are complete locally.
+- Live official-data dry run completed with zero ending offerings for 2026-07-23.
+- Dry run was verified not to change the persisted delivery history.
+
+## Evidence
+
+- `npm run check`: 3 test files and 7 tests passed.
+- Live official endpoints returned HTTP 200 and expected fields on 2026-07-23.
+- `npm run dry-run`: successful no-offering heartbeat produced.
+- `git diff --check`: passed.
+
+## Blockers and Risks
+
+- Complete issuance share counts are not exposed directly by the inspected
+  official OpenAPI endpoints. Strict recommendations require a sourced override.
+- Real LINE delivery and GitHub schedule activation require user-owned secrets and
+  a remote repository.
+
+## Next Action
+
+Initialize and commit the local repository. External publication and a real LINE
+test require the user's GitHub/LINE configuration.
+
+## Loop Controls
+
+- Model tier: standard
+- Escalation trigger: official source schema contradiction or failed integration
+- Execution mode: primary agent
+- Delegation justification: none
+- Retry count: 1
+- Retry limit: two attempts per failing hypothesis
+- Human gate: real LINE send, GitHub remote creation, or secret configuration
+- Stop condition: checks and dry run pass; remaining external setup is explicit
