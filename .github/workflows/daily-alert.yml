@@ -13,6 +13,18 @@ on:
         required: true
         type: boolean
         default: true
+      evaluation_date:
+        description: Optional evaluation date in YYYY-MM-DD; blank uses today in Taipei
+        required: false
+        type: string
+      dilution_policy:
+        description: Strict for production; proxy is only for labelled testing
+        required: true
+        type: choice
+        options:
+          - strict
+          - public-offering-proxy
+        default: strict
 
 permissions:
   contents: write
@@ -34,7 +46,8 @@ jobs:
       LINE_TARGET_ID_005: ${{ secrets.LINE_TARGET_ID_005 }}
       MIN_DISCOUNT_PERCENT: "20"
       MIN_SAFETY_MARGIN_PERCENT: "10"
-      DILUTION_POLICY: "strict"
+      EVALUATION_DATE: ${{ github.event_name == 'workflow_dispatch' && inputs.evaluation_date || '' }}
+      DILUTION_POLICY: ${{ github.event_name == 'workflow_dispatch' && inputs.dilution_policy || 'strict' }}
       DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || 'false' }}
 
     steps:

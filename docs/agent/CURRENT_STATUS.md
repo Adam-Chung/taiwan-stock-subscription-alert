@@ -37,6 +37,11 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
   code substituted into `STOCK_ID`.
 - Announcement-link verification passed with the full 12-test suite and
   `git diff --check`.
+- Manual workflow inputs now support an optional historical evaluation date and
+  an explicitly selected dilution policy; scheduled runs remain current-date
+  strict mode.
+- The 2026-07-22 official-data proxy dry run evaluated two offerings and selected
+  8112 with a complete LINE message including its announcement link.
 
 ## Evidence
 
@@ -55,8 +60,8 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 
 ## Next Action
 
-Push the per-stock announcement link, then configure one or more LINE recipient
-Secrets and perform an approved real LINE test.
+Push the verified historical test mode, inspect configured Secrets, and perform
+the requested real LINE test.
 
 ## Loop Controls
 

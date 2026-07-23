@@ -88,6 +88,17 @@ npm run dry-run
 
 Dry run 不需要 LINE 憑證，也不會發送訊息。
 
+可使用環境變數重跑特定日期：
+
+```powershell
+$env:EVALUATION_DATE="2026-07-22"
+$env:DILUTION_POLICY="public-offering-proxy"
+npm run dry-run
+```
+
+`EVALUATION_DATE` 只影響該次執行。正式排程未提供日期時仍使用台北當日；
+`public-offering-proxy` 會在訊息中明確標示並警告可能低估稀釋。
+
 真實發送前，複製 `.env.example` 的變數到執行環境並設定：
 
 - `LINE_CHANNEL_ACCESS_TOKEN`
@@ -121,6 +132,9 @@ Workflow 使用 UTC cron，對應台灣時間：
 
 - `10 0 * * 1-5`：08:10
 - `10 3 * * 1-5`：11:10 備援
+
+手動執行時可另外指定 `evaluation_date` 與 `dilution_policy`，用來重跑歷史
+日期或驗證 LINE 版面；排程執行固定採當日與 `strict`。
 
 主要排程成功後會提交 `data/run-history.json`，只記錄每位收件者的 alias、
 SHA-256 雜湊及成功時間。備援排程只發送給當天尚未成功的收件者，因此正常
