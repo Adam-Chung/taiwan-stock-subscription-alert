@@ -41,6 +41,9 @@ export function buildSuccessMessage(
         `${scaleLabel}：${formatPercent(item.scalePercent)}`,
         `安全邊際：${formatPercent(item.safetyMarginPercent)} 個百分點`,
         ...(item.warning ? [`注意：${item.warning}`] : []),
+        `公告資訊：https://goodinfo.tw/tw/StockAnnounceList.asp?STOCK_ID=${encodeURIComponent(
+          item.offering.code,
+        )}`,
       );
     }
   }

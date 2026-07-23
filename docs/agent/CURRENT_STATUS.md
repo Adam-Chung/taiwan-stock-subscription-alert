@@ -1,6 +1,6 @@
 # Current Status
 
-Last updated: 2026-07-23 16:17 Asia/Taipei
+Last updated: 2026-07-23 16:20 Asia/Taipei
 
 ## Current Objective
 
@@ -33,6 +33,10 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
   backup execution retries only recipients not yet successful that day.
 - Multi-recipient final verification and official-data dry run passed without
   changing delivery history.
+- Each recommended stock now includes a Goodinfo announcement URL with its stock
+  code substituted into `STOCK_ID`.
+- Announcement-link verification passed with the full 12-test suite and
+  `git diff --check`.
 
 ## Evidence
 
@@ -51,7 +55,7 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 
 ## Next Action
 
-Push the multi-recipient change, then configure one or more LINE recipient
+Push the per-stock announcement link, then configure one or more LINE recipient
 Secrets and perform an approved real LINE test.
 
 ## Loop Controls
