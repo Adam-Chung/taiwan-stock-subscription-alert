@@ -32,6 +32,8 @@ Configure `LINE_CHANNEL_ACCESS_TOKEN` and one or more
 - Resilient MOPS label/unit parsing and 25 tests: passed
 - Strict historical dry run for 2026-07-15: three offerings evaluated and zero
   qualified, producing the expected success heartbeat
+- GitHub Actions Run #4: succeeded; alias `001` received the forced 2026-07-15
+  heartbeat and the privacy-safe delivery marker was persisted
 - Historical real-delivery test: Run #2 succeeded for 2026-07-22; alias `001`
   recorded as sent
 - Not yet verified: GitHub-hosted execution and real LINE delivery
