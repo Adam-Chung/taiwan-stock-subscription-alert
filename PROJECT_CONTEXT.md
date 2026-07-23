@@ -13,7 +13,10 @@ the configured safety-margin result.
 - Run Monday through Friday; Saturday and Sunday do not require a message.
 - Send a success heartbeat even when no offering qualifies.
 - Never present a data-source failure as "no qualifying offering".
-- Use LINE Messaging API Push to one configured target.
+- Use LINE Messaging API Push for every non-empty `LINE_TARGET_ID_<ALIAS>`.
+- Attempt every configured recipient independently; one failure must not block
+  other recipients.
+- Persist recipient alias and SHA-256 fingerprint only, never the raw userId.
 - Include current price and change from the previous trading day's close.
 - Discount must be greater than 20%.
 - Discount minus issuance-scale percentage must be greater than 10 percentage
@@ -29,6 +32,8 @@ the configured safety-margin result.
 - Strict dilution policy by default. Complete new-share counts are supplied with
   an official source URL in `config/issuance-overrides.json`.
 - Credentials remain in GitHub Secrets and are never committed.
+- Application recipient count is unlimited. The hosted workflow explicitly
+  injects five Secret slots and can be extended when needed.
 
 ## Repository
 

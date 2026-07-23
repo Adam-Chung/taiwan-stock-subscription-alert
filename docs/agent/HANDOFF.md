@@ -1,10 +1,11 @@
 # Handoff
 
-Last updated: 2026-07-23 16:08 Asia/Taipei
+Last updated: 2026-07-23 16:16 Asia/Taipei
 
 ## Resume Here
 
-Configure the two LINE Secrets and manually run the workflow once with
+Configure `LINE_CHANNEL_ACCESS_TOKEN` and one or more
+`LINE_TARGET_ID_<ALIAS>` Secrets, then manually run the workflow with
 `dry_run=true`.
 
 ## Objective and Current Position
@@ -24,6 +25,7 @@ Configure the two LINE Secrets and manually run the workflow once with
 - Live official-data dry run: passed
 - Dry-run persistence guard: passed
 - Private GitHub repository: created and `main` pushed
+- Multi-recipient build and 12 tests: passed
 - Not yet verified: GitHub-hosted execution and real LINE delivery
 
 ## Open Issues

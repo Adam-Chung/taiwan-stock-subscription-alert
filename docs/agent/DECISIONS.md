@@ -34,3 +34,17 @@
 - Reason: A bid or ask is not an executed market price.
 - Consequences: A no-trade security reports zero daily change with a warning.
 - Supersedes: none
+
+## DEC-004: Dynamic multi-recipient delivery
+
+- Date: 2026-07-23
+- Status: accepted
+- Context: LINE delivery must match the established `ai-news-line-bot` model.
+- Decision: Load all non-empty `LINE_TARGET_ID_<ALIAS>` variables, reject
+  duplicate userIds, use independent settled delivery, and persist only aliases
+  and SHA-256 fingerprints.
+- Reason: Recipient count can grow without code changes, partial failures remain
+  isolated, and backup execution avoids duplicate delivery.
+- Consequences: GitHub Actions must explicitly inject every Repository Secret;
+  five slots are included initially.
+- Supersedes: single `LINE_TARGET_ID`

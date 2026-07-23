@@ -1,19 +1,32 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 
 interface History {
-  dates: Record<string, { sentAt: string; status: "sent" }>;
+  dates: Record<
+    string,
+    {
+      recipients: Record<string, { alias: string; sentAt: string }>;
+    }
+  >;
 }
 
 const HISTORY_PATH = new URL("../data/run-history.json", import.meta.url);
 
-export async function wasSent(date: string): Promise<boolean> {
+export async function loadSentRecipientHashes(date: string): Promise<Set<string>> {
   const history = await readHistory();
-  return history.dates[date]?.status === "sent";
+  return new Set(Object.keys(history.dates[date]?.recipients ?? {}));
 }
 
-export async function recordRun(date: string, status: "sent"): Promise<void> {
+export async function recordSuccessfulDeliveries(
+  date: string,
+  recipients: Array<{ alias: string; hash: string }>,
+): Promise<void> {
+  if (recipients.length === 0) return;
   const history = await readHistory();
-  history.dates[date] = { sentAt: new Date().toISOString(), status };
+  const dateRecord = (history.dates[date] ??= { recipients: {} });
+  const sentAt = new Date().toISOString();
+  for (const recipient of recipients) {
+    dateRecord.recipients[recipient.hash] = { alias: recipient.alias, sentAt };
+  }
   await mkdir(new URL("../data/", import.meta.url), { recursive: true });
   await writeFile(HISTORY_PATH, `${JSON.stringify(history, null, 2)}\n`, "utf8");
 }

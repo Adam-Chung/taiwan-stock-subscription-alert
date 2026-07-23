@@ -1,7 +1,7 @@
 # 台股申購提醒
 
 每天在台股公開申購截止日執行規則篩選，將結果或「今日無符合標的」
-狀態透過 LINE 傳給單一使用者。專案使用免費官方資料與 GitHub Actions
+狀態透過 LINE 傳給一位或多位使用者。專案使用免費官方資料與 GitHub Actions
 免費額度，不需要付費行情或主機。
 
 ## 已實作功能
@@ -12,6 +12,9 @@
 - 計算市價折價率、承銷價帳面報酬率、發行規模及安全邊際。
 - 嚴格區分完整股數稀釋率與公開申購規模下限。
 - 有標的、無標的及整體資料失敗使用不同 LINE 訊息。
+- 動態讀取所有 `LINE_TARGET_ID_<ALIAS>`，每位收件者獨立發送。
+- 單一收件者失敗不阻止其他人，備援排程只重試尚未成功者。
+- 紀錄只保存 alias 與 SHA-256 userId 雜湊，不保存原始 userId。
 - 08:10 與 11:10（Asia/Taipei）兩次免費排程；每日成功標記避免重複發送。
 - 所有憑證只從環境變數或 GitHub Secrets 讀取。
 
@@ -87,7 +90,16 @@ Dry run 不需要 LINE 憑證，也不會發送訊息。
 真實發送前，複製 `.env.example` 的變數到執行環境並設定：
 
 - `LINE_CHANNEL_ACCESS_TOKEN`
-- `LINE_TARGET_ID`
+- 至少一個 `LINE_TARGET_ID_<ALIAS>`，例如：
+
+```text
+LINE_TARGET_ID_ADAM=Uxxxxxxxx
+LINE_TARGET_ID_FAMILY=Uyyyyyyyy
+```
+
+後綴會轉成紀錄 alias，例如 `LINE_TARGET_ID_TEAM_ALPHA` 會記錄為
+`Team Alpha`。空值會忽略，重複 userId 會使程式 fail closed。程式本身
+不限制收件者數量。
 - `DRY_RUN=false`
 
 不要提交 `.env` 或任何 token。
@@ -97,23 +109,29 @@ Dry run 不需要 LINE 憑證，也不會發送訊息。
 在 Private Repository 的 Settings → Secrets and variables → Actions 加入：
 
 - `LINE_CHANNEL_ACCESS_TOKEN`
-- `LINE_TARGET_ID`
+- `LINE_TARGET_ID_001`
+- `LINE_TARGET_ID_002`（有第二位收件者時）
+
+Workflow 預留 `001` 至 `005` 五個槽位。若需要更多人，可繼續在 workflow
+的 `env` 加入 `LINE_TARGET_ID_006` 等 Secret；GitHub Actions 不會自動把
+所有 Repository Secrets 注入程式，因此每個 Secret 名稱仍需明確列出。
 
 Workflow 使用 UTC cron，對應台灣時間：
 
 - `10 0 * * 1-5`：08:10
 - `10 3 * * 1-5`：11:10 備援
 
-主要排程成功後會提交 `data/run-history.json`。備援排程看到同一天已發送便
-直接結束，因此正常情況只會收到一則 LINE。建議在 GitHub Billing 將
-Actions 額外付費預算設為零。
+主要排程成功後會提交 `data/run-history.json`，只記錄每位收件者的 alias、
+SHA-256 雜湊及成功時間。備援排程只發送給當天尚未成功的收件者，因此正常
+情況每人只會收到一則 LINE。建議在 GitHub Billing 將 Actions 額外付費預算
+設為零。
 
 ## 免費額度與限制
 
 - GitHub Free 私有專案目前包含每月 Actions 免費分鐘；本專案每天兩次、
   每次上限十分鐘，但實際通常只需數十秒。
-- LINE 輕用量方案的免費訊息足以供單一使用者每日一則提醒，但仍應在
-  LINE 後台確認當期方案。
+- LINE 輕用量方案目前每月包含 200 則免費訊息；五位收件者每月約
+  100～115 則，仍應在 LINE 後台確認當期方案與實際用量。
 - GitHub cron 是 best-effort，可能延遲，不能保證固定分鐘送達。
 - MIS 免費資訊用於個人、低頻提醒；本專案不提供公開行情轉傳服務。
 - 尚未自動解析承銷公告或公開說明書中的整次新增股數。

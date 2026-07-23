@@ -1,18 +1,28 @@
 import { fetchCapitalInfo } from "./clients/capital.js";
-import { pushLineMessage } from "./clients/line.js";
+import { pushLineMessageToRecipients } from "./clients/line.js";
 import { fetchQuote } from "./clients/quotes.js";
 import { fetchEndingOfferings } from "./clients/subscriptions.js";
 import { loadIssuanceOverrides, loadPolicy } from "./config.js";
 import { evaluateOffering } from "./domain/calculations.js";
 import type { Evaluation, EvaluationFailure } from "./domain/types.js";
 import { buildFailureMessage, buildSuccessMessage } from "./message.js";
-import { recordRun, wasSent } from "./run-history.js";
+import { loadRecipients } from "./recipients.js";
+import {
+  loadSentRecipientHashes,
+  recordSuccessfulDeliveries,
+} from "./run-history.js";
 
 export async function run(date: string, dryRun: boolean): Promise<string> {
-  if (!dryRun && (await wasSent(date))) {
-    return `今日 ${date} 已成功發送，略過重複通知。`;
+  const recipients = dryRun ? [] : loadRecipients();
+  const sentHashes = dryRun ? new Set<string>() : await loadSentRecipientHashes(date);
+  const pendingRecipients = recipients.filter(
+    (recipient) => !sentHashes.has(recipient.hash),
+  );
+  if (!dryRun && pendingRecipients.length === 0) {
+    return `今日 ${date} 已成功發送給所有設定收件者，略過重複通知。`;
   }
 
+  let message: string;
   try {
     const offerings = await fetchEndingOfferings(date);
     const policy = loadPolicy();
@@ -40,17 +50,38 @@ export async function run(date: string, dryRun: boolean): Promise<string> {
       }
     }
 
-    const message = buildSuccessMessage(date, evaluated, failures);
-    if (!dryRun) {
-      await pushLineMessage(message);
-      await recordRun(date, "sent");
-    }
-    return message;
+    message = buildSuccessMessage(date, evaluated, failures);
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
-    const message = buildFailureMessage(date, reason);
-    if (dryRun) return message;
-    await pushLineMessage(message);
-    throw new Error(message, { cause: error });
+    const failureMessage = buildFailureMessage(date, reason);
+    if (dryRun) return failureMessage;
+    const alertOutcomes = await pushLineMessageToRecipients(
+      failureMessage,
+      pendingRecipients,
+    );
+    const alertFailures = alertOutcomes.filter((outcome) => outcome.status === "failed");
+    if (alertFailures.length > 0) {
+      throw new Error(
+        `${failureMessage}\n異常通知另有 ${alertFailures.length} 位收件者發送失敗`,
+        { cause: error },
+      );
+    }
+    throw new Error(failureMessage, { cause: error });
   }
+
+  if (dryRun) return message;
+  const outcomes = await pushLineMessageToRecipients(message, pendingRecipients);
+  const successes = outcomes
+    .filter((outcome) => outcome.status === "sent")
+    .map((outcome) => outcome.recipient);
+  await recordSuccessfulDeliveries(date, successes);
+  const failed = outcomes.filter((outcome) => outcome.status === "failed");
+  if (failed.length > 0) {
+    throw new Error(
+      `LINE 發送失敗：${failed
+        .map((outcome) => `${outcome.recipient.alias} (${outcome.error})`)
+        .join("；")}`,
+    );
+  }
+  return message;
 }

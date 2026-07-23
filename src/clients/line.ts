@@ -1,6 +1,16 @@
-export async function pushLineMessage(message: string): Promise<void> {
-  const token = requiredEnv("LINE_CHANNEL_ACCESS_TOKEN");
-  const target = requiredEnv("LINE_TARGET_ID");
+import type { LineRecipient } from "../recipients.js";
+
+export interface DeliveryOutcome {
+  recipient: LineRecipient;
+  status: "sent" | "failed";
+  error?: string;
+}
+
+export async function pushLineMessage(
+  message: string,
+  token: string,
+  target: string,
+): Promise<void> {
   const response = await fetch("https://api.line.me/v2/bot/message/push", {
     method: "POST",
     headers: {
@@ -19,7 +29,30 @@ export async function pushLineMessage(message: string): Promise<void> {
   }
 }
 
-function requiredEnv(name: string): string {
+export async function pushLineMessageToRecipients(
+  message: string,
+  recipients: LineRecipient[],
+): Promise<DeliveryOutcome[]> {
+  const token = requiredEnv("LINE_CHANNEL_ACCESS_TOKEN");
+  const results = await Promise.allSettled(
+    recipients.map((recipient) => pushLineMessage(message, token, recipient.targetId)),
+  );
+  return results.map((result, index) => ({
+    recipient: recipients[index]!,
+    status: result.status === "fulfilled" ? "sent" : "failed",
+    ...(result.status === "rejected"
+      ? { error: errorMessage(result.reason) }
+      : {}),
+  }));
+}
+
+function errorMessage(reason: unknown): string {
+  return reason instanceof Error
+    ? reason.message.slice(0, 300)
+    : String(reason).slice(0, 300);
+}
+
+export function requiredEnv(name: string): string {
   const value = process.env[name]?.trim();
   if (!value) throw new Error(`缺少環境變數 ${name}`);
   return value;

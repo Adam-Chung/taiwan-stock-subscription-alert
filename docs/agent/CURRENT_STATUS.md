@@ -1,6 +1,6 @@
 # Current Status
 
-Last updated: 2026-07-23 16:08 Asia/Taipei
+Last updated: 2026-07-23 16:17 Asia/Taipei
 
 ## Current Objective
 
@@ -27,10 +27,16 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 - Live official-data dry run completed with zero ending offerings for 2026-07-23.
 - Dry run was verified not to change the persisted delivery history.
 - Private GitHub repository was created and local `main` was pushed to `origin`.
+- LINE delivery now loads every non-empty `LINE_TARGET_ID_<ALIAS>`, rejects
+  duplicate userIds, and uses independent `Promise.allSettled()` delivery.
+- Per-recipient success state stores only alias, SHA-256 fingerprint, and time;
+  backup execution retries only recipients not yet successful that day.
+- Multi-recipient final verification and official-data dry run passed without
+  changing delivery history.
 
 ## Evidence
 
-- `npm run check`: 3 test files and 7 tests passed.
+- `npm run check`: 5 test files and 12 tests passed.
 - Live official endpoints returned HTTP 200 and expected fields on 2026-07-23.
 - `npm run dry-run`: successful no-offering heartbeat produced.
 - `git diff --check`: passed.
@@ -45,8 +51,8 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 
 ## Next Action
 
-Configure LINE Secrets, run one hosted dry run, and then perform an approved real
-LINE test.
+Push the multi-recipient change, then configure one or more LINE recipient
+Secrets and perform an approved real LINE test.
 
 ## Loop Controls
 
