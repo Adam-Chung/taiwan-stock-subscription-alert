@@ -7,4 +7,4 @@
 | TASK-003 | Implement official data and LINE clients | completed | primary agent | standard | Clients validate missing data and credentials | Build passed |
 | TASK-004 | Add free scheduling and durable state | completed | primary agent | standard | Two schedules and duplicate prevention are configured | Workflow and unchanged dry-run history verified |
 | TASK-005 | Complete documentation and verification | completed | primary agent | standard | README matches code; check and live dry run pass | Build and 7 tests passed; live dry run passed |
-| TASK-006 | Configure GitHub and real LINE delivery | pending | user + primary agent | standard | Secrets exist and one test delivery succeeds | Requires external credentials |
+| TASK-006 | Configure GitHub and real LINE delivery | in_progress | user + primary agent | standard | Secrets exist and one test delivery succeeds | Private repository created and pushed; LINE Secrets pending |

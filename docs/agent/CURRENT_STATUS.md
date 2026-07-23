@@ -1,6 +1,6 @@
 # Current Status
 
-Last updated: 2026-07-23 16:03 Asia/Taipei
+Last updated: 2026-07-23 16:08 Asia/Taipei
 
 ## Current Objective
 
@@ -26,6 +26,7 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
   state documentation, and README are complete locally.
 - Live official-data dry run completed with zero ending offerings for 2026-07-23.
 - Dry run was verified not to change the persisted delivery history.
+- Private GitHub repository was created and local `main` was pushed to `origin`.
 
 ## Evidence
 
@@ -33,18 +34,19 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 - Live official endpoints returned HTTP 200 and expected fields on 2026-07-23.
 - `npm run dry-run`: successful no-offering heartbeat produced.
 - `git diff --check`: passed.
+- GitHub remote: `https://github.com/Adam-Chung/taiwan-stock-subscription-alert`.
 
 ## Blockers and Risks
 
 - Complete issuance share counts are not exposed directly by the inspected
   official OpenAPI endpoints. Strict recommendations require a sourced override.
-- Real LINE delivery and GitHub schedule activation require user-owned secrets and
-  a remote repository.
+- Real LINE delivery and GitHub schedule activation require user-owned LINE
+  Secrets.
 
 ## Next Action
 
-Initialize and commit the local repository. External publication and a real LINE
-test require the user's GitHub/LINE configuration.
+Configure LINE Secrets, run one hosted dry run, and then perform an approved real
+LINE test.
 
 ## Loop Controls
 

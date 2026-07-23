@@ -30,6 +30,11 @@ the configured safety-margin result.
   an official source URL in `config/issuance-overrides.json`.
 - Credentials remain in GitHub Secrets and are never committed.
 
+## Repository
+
+- GitHub: https://github.com/Adam-Chung/taiwan-stock-subscription-alert
+- Visibility: Private
+
 ## External Boundaries
 
 - GitHub-hosted schedules are best-effort and can be delayed.

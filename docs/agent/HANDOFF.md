@@ -1,11 +1,11 @@
 # Handoff
 
-Last updated: 2026-07-23 16:03 Asia/Taipei
+Last updated: 2026-07-23 16:08 Asia/Taipei
 
 ## Resume Here
 
-Create the private GitHub remote, configure the two LINE Secrets, and manually run
-the workflow once with `dry_run=true`.
+Configure the two LINE Secrets and manually run the workflow once with
+`dry_run=true`.
 
 ## Objective and Current Position
 
@@ -23,6 +23,7 @@ the workflow once with `dry_run=true`.
 - Unit tests: 7 passed
 - Live official-data dry run: passed
 - Dry-run persistence guard: passed
+- Private GitHub repository: created and `main` pushed
 - Not yet verified: GitHub-hosted execution and real LINE delivery
 
 ## Open Issues
