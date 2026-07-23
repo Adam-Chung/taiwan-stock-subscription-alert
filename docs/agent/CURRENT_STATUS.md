@@ -42,6 +42,10 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
   strict mode.
 - The 2026-07-22 official-data proxy dry run evaluated two offerings and selected
   8112 with a complete LINE message including its announcement link.
+- GitHub Actions Run #2 completed successfully with `evaluation_date=2026-07-22`,
+  `public-offering-proxy`, and real delivery enabled.
+- Privacy-safe delivery history confirms alias `001` received the 2026-07-22
+  message at 2026-07-23T08:25:14.039Z.
 
 ## Evidence
 
@@ -60,8 +64,8 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 
 ## Next Action
 
-Push the verified historical test mode, inspect configured Secrets, and perform
-the requested real LINE test.
+Keep scheduled execution in current-date strict mode and obtain complete issuance
+share data for future recommendations where practical.
 
 ## Loop Controls
 

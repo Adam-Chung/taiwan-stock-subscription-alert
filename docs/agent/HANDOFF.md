@@ -26,6 +26,8 @@ Configure `LINE_CHANNEL_ACCESS_TOKEN` and one or more
 - Dry-run persistence guard: passed
 - Private GitHub repository: created and `main` pushed
 - Multi-recipient build and 12 tests: passed
+- Historical real-delivery test: Run #2 succeeded for 2026-07-22; alias `001`
+  recorded as sent
 - Not yet verified: GitHub-hosted execution and real LINE delivery
 
 ## Open Issues
