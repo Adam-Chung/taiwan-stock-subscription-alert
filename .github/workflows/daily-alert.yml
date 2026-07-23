@@ -25,6 +25,11 @@ on:
           - strict
           - public-offering-proxy
         default: strict
+      force_resend:
+        description: Send again even if this date already has a success record
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -48,6 +53,7 @@ jobs:
       MIN_SAFETY_MARGIN_PERCENT: "10"
       EVALUATION_DATE: ${{ github.event_name == 'workflow_dispatch' && inputs.evaluation_date || '' }}
       DILUTION_POLICY: ${{ github.event_name == 'workflow_dispatch' && inputs.dilution_policy || 'strict' }}
+      FORCE_RESEND: ${{ github.event_name == 'workflow_dispatch' && inputs.force_resend || 'false' }}
       DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || 'false' }}
 
     steps:

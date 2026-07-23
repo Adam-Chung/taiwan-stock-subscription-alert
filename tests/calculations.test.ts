@@ -37,7 +37,6 @@ describe("evaluateOffering", () => {
       },
     );
     expect(result.discountPercent).toBeCloseTo(40);
-    expect(result.returnOnCostPercent).toBeCloseTo(66.6667);
     expect(result.dailyChangePercent).toBeCloseTo(5.2632);
     expect(result.scalePercent).toBeCloseTo(10);
     expect(result.safetyMarginPercent).toBeCloseTo(30);
@@ -97,6 +96,7 @@ describe("evaluateOffering", () => {
       dilutionPolicy: "public-offering-proxy",
     });
     expect(result.scaleKind).toBe("public-offering-proxy");
+    expect(result.recommendationKind).toBe("price-only");
     expect(result.warning).toContain("可能低估");
   });
 

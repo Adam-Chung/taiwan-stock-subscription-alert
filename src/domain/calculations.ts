@@ -24,10 +24,6 @@ export function evaluateOffering(
 
   const discountPercent =
     ((quote.currentPrice - offering.actualUnderwritingPrice) / quote.currentPrice) * 100;
-  const returnOnCostPercent =
-    ((quote.currentPrice - offering.actualUnderwritingPrice) /
-      offering.actualUnderwritingPrice) *
-    100;
   const hasPreviousClose =
     quote.previousClose !== undefined &&
     Number.isFinite(quote.previousClose) &&
@@ -41,6 +37,8 @@ export function evaluateOffering(
 
   let scalePercent: number | undefined;
   let scaleKind: Evaluation["scaleKind"];
+  let totalNewShares: number | undefined;
+  let postIssueTotalShares: number | undefined;
   let warning: string | undefined;
 
   if (!capital) {
@@ -48,9 +46,10 @@ export function evaluateOffering(
   } else if (issuance) {
     assertPositive("已發行普通股數", capital.issuedCommonShares);
     assertPositive("整次新增發行股數", issuance.totalNewShares);
+    totalNewShares = issuance.totalNewShares;
+    postIssueTotalShares = capital.issuedCommonShares + issuance.totalNewShares;
     scalePercent =
-      (issuance.totalNewShares / (capital.issuedCommonShares + issuance.totalNewShares)) *
-      100;
+      (totalNewShares / postIssueTotalShares) * 100;
     scaleKind = "dilution";
   } else if (policy.dilutionPolicy === "public-offering-proxy") {
     assertPositive("已發行普通股數", capital.issuedCommonShares);
@@ -71,18 +70,25 @@ export function evaluateOffering(
   const recommendationKind: Evaluation["recommendationKind"] =
     !passesDiscount
       ? "none"
-      : safetyMarginPercent === undefined
-        ? "price-only"
-        : safetyMarginPercent > policy.minSafetyMarginPercent
+      : scaleKind === "dilution"
+        ? safetyMarginPercent! > policy.minSafetyMarginPercent
           ? "complete"
-          : "none";
+          : "none"
+        : scaleKind === "public-offering-proxy"
+          ? safetyMarginPercent! > policy.minSafetyMarginPercent
+            ? "price-only"
+            : "none"
+          : safetyMarginPercent === undefined
+        ? "price-only"
+        : "none";
   return {
     offering,
     quote,
     discountPercent,
-    returnOnCostPercent,
     ...(dailyChangeAmount !== undefined ? { dailyChangeAmount } : {}),
     ...(dailyChangePercent !== undefined ? { dailyChangePercent } : {}),
+    ...(totalNewShares !== undefined ? { totalNewShares } : {}),
+    ...(postIssueTotalShares !== undefined ? { postIssueTotalShares } : {}),
     ...(scalePercent !== undefined ? { scalePercent } : {}),
     ...(scaleKind !== undefined ? { scaleKind } : {}),
     ...(safetyMarginPercent !== undefined ? { safetyMarginPercent } : {}),

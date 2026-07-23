@@ -1,6 +1,6 @@
 # Current Status
 
-Last updated: 2026-07-23 16:20 Asia/Taipei
+Last updated: 2026-07-23 16:35 Asia/Taipei
 
 ## Current Objective
 
@@ -50,6 +50,13 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
   or issued common shares are missing, with a `price-only` classification.
 - Missing previous close no longer blocks price evaluation; it only makes daily
   change unavailable.
+- LINE format revision is in progress: slash-formatted quote date, clearer
+  spacing, no return-on-cost line, complete issuance fields, blank unavailable
+  values, and linked incomplete-stock details.
+- Manual workflow now has an explicit `force_resend` input for authorized repeat
+  tests without weakening scheduled duplicate prevention.
+- Revised format verification passed: 5 test files and 16 tests, 2026-07-22
+  official-data dry run, and `git diff --check`.
 
 ## Evidence
 
@@ -69,7 +76,8 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 
 ## Next Action
 
-Commit and push the verified incomplete-data fallback behavior.
+Publish the revised LINE format, then force-resend the 2026-07-22 historical
+message once.
 
 ## Loop Controls
 

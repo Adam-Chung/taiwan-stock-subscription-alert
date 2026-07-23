@@ -13,8 +13,12 @@ import {
 } from "./run-history.js";
 
 export async function run(date: string, dryRun: boolean): Promise<string> {
+  const forceResend = process.env.FORCE_RESEND === "true";
   const recipients = dryRun ? [] : loadRecipients();
-  const sentHashes = dryRun ? new Set<string>() : await loadSentRecipientHashes(date);
+  const sentHashes =
+    dryRun || forceResend
+      ? new Set<string>()
+      : await loadSentRecipientHashes(date);
   const pendingRecipients = recipients.filter(
     (recipient) => !sentHashes.has(recipient.hash),
   );

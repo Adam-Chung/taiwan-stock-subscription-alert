@@ -35,9 +35,10 @@ export interface Evaluation {
   offering: SubscriptionOffering;
   quote: Quote;
   discountPercent: number;
-  returnOnCostPercent: number;
   dailyChangeAmount?: number;
   dailyChangePercent?: number;
+  totalNewShares?: number;
+  postIssueTotalShares?: number;
   scalePercent?: number;
   scaleKind?: "dilution" | "public-offering-proxy";
   safetyMarginPercent?: number;
