@@ -34,8 +34,9 @@ the configured safety-margin result.
 - Private GitHub repository and GitHub Actions free allowance.
 - Two weekday schedules with a persisted daily marker to prevent duplicate LINE
   notifications.
-- Strict dilution policy by default. Complete new-share counts are supplied with
-  an official source URL in `config/issuance-overrides.json`.
+- Strict dilution policy by default. Complete new-share counts are parsed from
+  MOPS cash-capital-increase material announcements; sourced entries in
+  `config/issuance-overrides.json` remain an explicit fallback.
 - Credentials remain in GitHub Secrets and are never committed.
 - Application recipient count is unlimited. The hosted workflow explicitly
   injects five Secret slots and can be extended when needed.
@@ -49,5 +50,6 @@ the configured safety-margin result.
 
 - GitHub-hosted schedules are best-effort and can be delayed.
 - TWSE MIS is used only for a private, low-volume personal alert.
-- Automatic extraction of complete issuance shares from prospectuses is not yet
-  implemented.
+- MOPS announcement markup and wording are not a versioned API contract. Parsing
+  therefore fails closed and reports issuance data as missing when no supported
+  total-new-share wording is found.

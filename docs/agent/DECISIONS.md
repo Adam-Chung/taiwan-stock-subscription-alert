@@ -63,3 +63,19 @@
 - Consequences: LINE distinguishes `complete` from `price-only`; missing
   underwriting price or all usable market prices still fails evaluation.
 - Supersedes: DEC-002 strict exclusion behavior
+
+## DEC-006: Resolve total new shares from MOPS material announcements
+
+- Date: 2026-07-23
+- Status: accepted
+- Context: The MOPS essence page links each issuer's cash-capital-increase
+  material announcement, which states the complete issuance share count.
+- Decision: Search MOPS by stock code, follow matching cash-capital-increase
+  announcement references, parse supported total-share wording, validate the
+  result against actual underwriting shares, and retain sourced overrides as a
+  higher-priority fallback.
+- Reason: This supplies official complete issuance data without confusing public
+  subscription shares with the entire capital increase.
+- Consequences: Unsupported or changed MOPS wording fails closed and is reported
+  as missing issuance data.
+- Supersedes: manual-only issuance lookup in DEC-002

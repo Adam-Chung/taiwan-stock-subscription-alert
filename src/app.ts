@@ -1,5 +1,6 @@
 import { fetchCapitalInfo } from "./clients/capital.js";
 import { pushLineMessageToRecipients } from "./clients/line.js";
+import { fetchMopsIssuance } from "./clients/mops-issuance.js";
 import { fetchQuote } from "./clients/quotes.js";
 import { fetchEndingOfferings } from "./clients/subscriptions.js";
 import { loadIssuanceOverrides, loadPolicy } from "./config.js";
@@ -39,10 +40,15 @@ export async function run(date: string, dryRun: boolean): Promise<string> {
         if (!Number.isFinite(offering.actualUnderwritingPrice)) {
           throw new Error("實際承銷價尚未確定");
         }
-        const quote = await fetchQuote(offering);
-        const capital = await fetchCapitalInfo(offering.code).catch(() => undefined);
+        const [quote, capital, issuance] = await Promise.all([
+          fetchQuote(offering),
+          fetchCapitalInfo(offering.code).catch(() => undefined),
+          overrides[offering.code]
+            ? Promise.resolve(overrides[offering.code])
+            : fetchMopsIssuance(offering),
+        ]);
         evaluated.push(
-          evaluateOffering(offering, quote, capital, overrides[offering.code], policy),
+          evaluateOffering(offering, quote, capital, issuance, policy),
         );
       } catch (error) {
         failures.push({

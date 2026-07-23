@@ -1,6 +1,6 @@
 # Handoff
 
-Last updated: 2026-07-23 16:16 Asia/Taipei
+Last updated: 2026-07-23 17:05 Asia/Taipei
 
 ## Resume Here
 
@@ -26,13 +26,17 @@ Configure `LINE_CHANNEL_ACCESS_TOKEN` and one or more
 - Dry-run persistence guard: passed
 - Private GitHub repository: created and `main` pushed
 - Multi-recipient build and 12 tests: passed
+- MOPS complete-issuance integration build and 20 tests: passed
+- Strict historical dry run for 2026-07-22: both offerings evaluated; 8112
+  resolved 40,000,000 new shares and qualified
 - Historical real-delivery test: Run #2 succeeded for 2026-07-22; alias `001`
   recorded as sent
 - Not yet verified: GitHub-hosted execution and real LINE delivery
 
 ## Open Issues
 
-- Strict dilution requires sourced entries in `config/issuance-overrides.json`.
+- MOPS format changes may require parser updates; sourced overrides remain the
+  fallback.
 - LINE Secrets and GitHub remote require user-owned external setup.
 
 ## Working Boundaries

@@ -1,6 +1,6 @@
 # Current Status
 
-Last updated: 2026-07-23 16:35 Asia/Taipei
+Last updated: 2026-07-23 17:05 Asia/Taipei
 
 ## Current Objective
 
@@ -57,10 +57,15 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
   tests without weakening scheduled duplicate prevention.
 - Revised format verification passed: 5 test files and 16 tests, 2026-07-22
   official-data dry run, and `git diff --check`.
+- Complete new-share counts are now automatically resolved through the MOPS
+  essence search and matching cash-capital-increase material announcement.
+- The 2026-07-22 strict official-data dry run completed both offerings; 8112
+  resolved 40,000,000 new shares, 565,291,698 post-issue shares, 7.08% dilution,
+  and a 17.92-point safety margin.
 
 ## Evidence
 
-- `npm run check`: 5 test files and 15 tests passed for the new fallback rules.
+- `npm run check`: 6 test files and 20 tests passed.
 - Live official endpoints returned HTTP 200 and expected fields on 2026-07-23.
 - `npm run dry-run`: successful no-offering heartbeat produced.
 - `git diff --check`: passed.
@@ -68,16 +73,14 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 
 ## Blockers and Risks
 
-- Complete issuance share counts are not exposed directly by the inspected
-  official OpenAPI endpoints. Such stocks are reported as price-only unless a
-  sourced override enables complete safety-margin evaluation.
+- MOPS announcement HTML and prose can change without an API schema guarantee;
+  unsupported wording fails closed and can use a sourced manual override.
 - Real LINE delivery and GitHub schedule activation require user-owned LINE
   Secrets.
 
 ## Next Action
 
-Publish the revised LINE format, then force-resend the 2026-07-22 historical
-message once.
+Publish the MOPS issuance integration and documentation.
 
 ## Loop Controls
 
