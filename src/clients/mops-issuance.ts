@@ -96,15 +96,30 @@ export function parseCapitalIncreaseReferences(
 
 export function parseTotalNewShares(html: string): number {
   const text = htmlToText(html);
+  const issuanceSection =
+    text.match(
+      /(?:^|\s)5[.、．]\s*發行總金額及股數\s*[:：]?([\s\S]*?)(?=\s6[.、．]\s*|$)/,
+    )?.[1] ?? text;
   const patterns = [
-    /發行總股數\s*[:：]\s*([\d,]+)\s*股/,
-    /本次發行(?:總)?股數\s*[:：]\s*([\d,]+)\s*股/,
-    /發行(?:普通股|新股)\s*([\d,]+)\s*股/,
+    /發行總股數\s*[:：]?\s*(?:普通股\s*)?([\d,.]+)\s*(億|萬|千|仟)?股/,
+    /本次發行(?:總)?股數\s*[:：]?\s*(?:普通股\s*)?([\d,.]+)\s*(億|萬|千|仟)?股/,
+    /發行股數\s*[:：]?\s*(?:普通股\s*)?([\d,.]+)\s*(億|萬|千|仟)?股/,
+    /(?:發行|增資發行)(?:普通股|新股)\s*([\d,.]+)\s*(億|萬|千|仟)?股/,
   ];
   for (const pattern of patterns) {
-    const value = text.match(pattern)?.[1];
+    const match = issuanceSection.match(pattern);
+    const value = match?.[1];
     if (!value) continue;
-    const shares = Number(value.replaceAll(",", ""));
+    const unit = match?.[2] ?? "";
+    const multiplier =
+      unit === "億"
+        ? 100_000_000
+        : unit === "萬"
+          ? 10_000
+          : unit === "千" || unit === "仟"
+            ? 1_000
+            : 1;
+    const shares = Number(value.replaceAll(",", "")) * multiplier;
     if (Number.isSafeInteger(shares) && shares > 0) return shares;
   }
   throw new Error("公告內找不到有效的發行總股數");

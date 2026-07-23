@@ -1,6 +1,6 @@
 # Handoff
 
-Last updated: 2026-07-23 17:05 Asia/Taipei
+Last updated: 2026-07-23 17:17 Asia/Taipei
 
 ## Resume Here
 
@@ -29,6 +29,9 @@ Configure `LINE_CHANNEL_ACCESS_TOKEN` and one or more
 - MOPS complete-issuance integration build and 20 tests: passed
 - Strict historical dry run for 2026-07-22: both offerings evaluated; 8112
   resolved 40,000,000 new shares and qualified
+- Resilient MOPS label/unit parsing and 25 tests: passed
+- Strict historical dry run for 2026-07-15: three offerings evaluated and zero
+  qualified, producing the expected success heartbeat
 - Historical real-delivery test: Run #2 succeeded for 2026-07-22; alias `001`
   recorded as sent
 - Not yet verified: GitHub-hosted execution and real LINE delivery

@@ -45,7 +45,7 @@ export async function run(date: string, dryRun: boolean): Promise<string> {
           fetchCapitalInfo(offering.code).catch(() => undefined),
           overrides[offering.code]
             ? Promise.resolve(overrides[offering.code])
-            : fetchMopsIssuance(offering),
+            : fetchMopsIssuance(offering).catch(() => undefined),
         ]);
         evaluated.push(
           evaluateOffering(offering, quote, capital, issuance, policy),

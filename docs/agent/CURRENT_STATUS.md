@@ -1,6 +1,6 @@
 # Current Status
 
-Last updated: 2026-07-23 17:05 Asia/Taipei
+Last updated: 2026-07-23 17:17 Asia/Taipei
 
 ## Current Objective
 
@@ -62,10 +62,14 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 - The 2026-07-22 strict official-data dry run completed both offerings; 8112
   resolved 40,000,000 new shares, 565,291,698 post-issue shares, 7.08% dilution,
   and a 17.92-point safety margin.
+- MOPS parsing now recognizes common total-share labels and 股/千股/仟股/萬股/
+  億股 units while preferring announcement item 5 to avoid partial allocations.
+- The 2026-07-15 strict dry run completed all three ending offerings and produced
+  a successful zero-qualifier heartbeat.
 
 ## Evidence
 
-- `npm run check`: 6 test files and 20 tests passed.
+- `npm run check`: 6 test files and 25 tests passed.
 - Live official endpoints returned HTTP 200 and expected fields on 2026-07-23.
 - `npm run dry-run`: successful no-offering heartbeat produced.
 - `git diff --check`: passed.
@@ -80,7 +84,7 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 
 ## Next Action
 
-Publish the MOPS issuance integration and documentation.
+Publish the resilient MOPS parsing and send the authorized 2026-07-15 LINE test.
 
 ## Loop Controls
 
