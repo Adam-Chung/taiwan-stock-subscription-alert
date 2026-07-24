@@ -15,7 +15,7 @@
 ## DEC-002: Do not fake complete dilution
 
 - Date: 2026-07-23
-- Status: accepted
+- Status: superseded by DEC-009
 - Context: The public subscription schedule exposes only public underwriting
   shares, not necessarily all newly issued shares.
 - Decision: Default to strict mode and require sourced total-new-share data.
@@ -107,3 +107,18 @@
 - Consequences: Runs take slightly longer; rate limiting still does not grant
   access or redistribution rights.
 - Supersedes: none
+
+## DEC-009: Remove public-underwriting proxy calculations
+
+- Date: 2026-07-24
+- Status: accepted
+- Context: The exploratory proxy mode could be misunderstood as a valid dilution
+  or safety-margin calculation.
+- Decision: Remove the mode, environment variable, workflow option, calculation
+  branch, warning, documentation, and dedicated test. Only complete issuance
+  shares may produce dilution and safety-margin values.
+- Reason: One conservative rule is clearer and cannot silently understate the
+  full issuance impact.
+- Consequences: Missing complete issuance data remains `price-only`, with blank
+  issuance and safety-margin fields.
+- Supersedes: The lower-bound proxy option in DEC-002

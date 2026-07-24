@@ -20,7 +20,8 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
   message formatting, and daily delivery marker are implemented.
 - Current price, previous close, price change, and daily change percentage are
   included in the output.
-- Strict and explicitly labelled proxy issuance policies are implemented.
+- Dilution calculations require complete issuance data; the former public-
+  offering proxy mode has been removed.
 - Initial TypeScript build and seven tests pass.
 - GitHub workflow, duplicate-safe persisted delivery marker, project context,
   state documentation, and README are complete locally.
@@ -37,9 +38,7 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
   code substituted into `STOCK_ID`.
 - Announcement-link verification passed with the full 12-test suite and
   `git diff --check`.
-- Manual workflow inputs now support an optional historical evaluation date and
-  an explicitly selected dilution policy; scheduled runs remain current-date
-  strict mode.
+- Manual workflow inputs support an optional historical evaluation date.
 - The 2026-07-22 official-data proxy dry run evaluated two offerings and selected
   8112 with a complete LINE message including its announcement link.
 - GitHub Actions Run #2 completed successfully with `evaluation_date=2026-07-22`,
@@ -80,10 +79,16 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
   webpage access is default-disabled pending confirmed authorization.
 - Public-release safeguards passed 7 test files and 27 tests; the 2026-07-24
   official-data dry run completed successfully with MOPS disabled by default.
+- Public-underwriting proxy calculations, configuration, workflow inputs,
+  documentation, and tests have been removed. Incomplete issuance data remains
+  clearly labelled and is never substituted.
+- Proxy removal verification passed 7 test files and 26 tests. The 2026-05-29
+  dry run still reported both price-qualified offerings with blank dilution and
+  safety-margin fields.
 
 ## Evidence
 
-- `npm run check`: 7 test files and 27 tests passed.
+- `npm run check`: 7 test files and 26 tests passed after proxy removal.
 - Live official endpoints returned HTTP 200 and expected fields on 2026-07-23.
 - `npm run dry-run`: successful no-offering heartbeat produced.
 - `git diff --check`: passed.

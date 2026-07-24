@@ -34,9 +34,10 @@ the configured safety-margin result.
 - Private GitHub repository and GitHub Actions free allowance.
 - Two weekday schedules with a persisted daily marker to prevent duplicate LINE
   notifications.
-- Strict dilution policy by default. Complete new-share counts are parsed from
-  MOPS cash-capital-increase material announcements; sourced entries in
-  `config/issuance-overrides.json` remain an explicit fallback.
+- Complete new-share counts are required for dilution and safety-margin
+  calculations. Public-underwriting shares are never used as a proxy. Counts
+  come from authorized MOPS access or sourced entries in
+  `config/issuance-overrides.json`.
 - Credentials remain in GitHub Secrets and are never committed.
 - Application recipient count is unlimited. The hosted workflow explicitly
   injects five Secret slots and can be extended when needed.

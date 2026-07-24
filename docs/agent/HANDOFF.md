@@ -41,6 +41,9 @@ Configure `LINE_CHANNEL_ACCESS_TOKEN` and one or more
   webpage automation.
 - Verification: 7 test files and 27 tests passed; 2026-07-24 official-data dry
   run passed with MOPS disabled.
+- Public-underwriting proxy mode removed from runtime policy, calculations,
+  workflow inputs, environment configuration, tests, and README. Missing complete
+  issuance data remains price-only and does not produce dilution values.
 - Historical real-delivery test: Run #2 succeeded for 2026-07-22; alias `001`
   recorded as sent
 - Not yet verified: GitHub-hosted execution and real LINE delivery

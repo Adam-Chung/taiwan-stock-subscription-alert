@@ -33,7 +33,6 @@ describe("evaluateOffering", () => {
       {
         minDiscountPercent: 20,
         minSafetyMarginPercent: 10,
-        dilutionPolicy: "strict",
       },
     );
     expect(result.discountPercent).toBeCloseTo(40);
@@ -48,7 +47,6 @@ describe("evaluateOffering", () => {
     const result = evaluateOffering(offering, quote, capital, undefined, {
       minDiscountPercent: 20,
       minSafetyMarginPercent: 10,
-      dilutionPolicy: "strict",
     });
     expect(result.recommendationKind).toBe("price-only");
     expect(result.recommended).toBe(true);
@@ -66,7 +64,6 @@ describe("evaluateOffering", () => {
       {
         minDiscountPercent: 20,
         minSafetyMarginPercent: 10,
-        dilutionPolicy: "strict",
       },
     );
     expect(result.recommendationKind).toBe("price-only");
@@ -82,22 +79,10 @@ describe("evaluateOffering", () => {
       {
         minDiscountPercent: 20,
         minSafetyMarginPercent: 10,
-        dilutionPolicy: "strict",
       },
     );
     expect(result.recommendationKind).toBe("complete");
     expect(result.dailyChangePercent).toBeUndefined();
-  });
-
-  it("proxy 模式清楚標示公開申購規模比只是下限", () => {
-    const result = evaluateOffering(offering, quote, capital, undefined, {
-      minDiscountPercent: 20,
-      minSafetyMarginPercent: 10,
-      dilutionPolicy: "public-offering-proxy",
-    });
-    expect(result.scaleKind).toBe("public-offering-proxy");
-    expect(result.recommendationKind).toBe("price-only");
-    expect(result.warning).toContain("可能低估");
   });
 
   it("門檻採嚴格大於而非大於等於", () => {
@@ -110,7 +95,6 @@ describe("evaluateOffering", () => {
       {
         minDiscountPercent: 20,
         minSafetyMarginPercent: 0,
-        dilutionPolicy: "strict",
       },
     );
     expect(result.discountPercent).toBeCloseTo(20);

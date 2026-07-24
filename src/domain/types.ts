@@ -40,7 +40,7 @@ export interface Evaluation {
   totalNewShares?: number;
   postIssueTotalShares?: number;
   scalePercent?: number;
-  scaleKind?: "dilution" | "public-offering-proxy";
+  scaleKind?: "dilution";
   safetyMarginPercent?: number;
   recommendationKind: "complete" | "price-only" | "none";
   recommended: boolean;

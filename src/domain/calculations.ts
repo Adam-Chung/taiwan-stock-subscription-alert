@@ -9,7 +9,6 @@ import type {
 export interface EvaluationPolicy {
   minDiscountPercent: number;
   minSafetyMarginPercent: number;
-  dilutionPolicy: "strict" | "public-offering-proxy";
 }
 
 export function evaluateOffering(
@@ -51,15 +50,6 @@ export function evaluateOffering(
     scalePercent =
       (totalNewShares / postIssueTotalShares) * 100;
     scaleKind = "dilution";
-  } else if (policy.dilutionPolicy === "public-offering-proxy") {
-    assertPositive("已發行普通股數", capital.issuedCommonShares);
-    assertPositive("實際公開承銷股數", offering.actualUnderwritingShares);
-    scalePercent =
-      (offering.actualUnderwritingShares /
-        (capital.issuedCommonShares + offering.actualUnderwritingShares)) *
-      100;
-    scaleKind = "public-offering-proxy";
-    warning = "僅取得公開申購股數，規模比是稀釋率下限，可能低估整次發行影響";
   } else {
     warning = "缺少整次新增發行股數，無法計算股數稀釋率與安全邊際";
   }
@@ -74,11 +64,7 @@ export function evaluateOffering(
         ? safetyMarginPercent! > policy.minSafetyMarginPercent
           ? "complete"
           : "none"
-        : scaleKind === "public-offering-proxy"
-          ? safetyMarginPercent! > policy.minSafetyMarginPercent
-            ? "price-only"
-            : "none"
-          : safetyMarginPercent === undefined
+        : safetyMarginPercent === undefined
         ? "price-only"
         : "none";
   return {

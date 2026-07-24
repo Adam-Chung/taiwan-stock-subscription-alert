@@ -3,14 +3,9 @@ import type { IssuanceOverride } from "./domain/types.js";
 import type { EvaluationPolicy } from "./domain/calculations.js";
 
 export function loadPolicy(): EvaluationPolicy {
-  const dilutionPolicy = process.env.DILUTION_POLICY ?? "strict";
-  if (dilutionPolicy !== "strict" && dilutionPolicy !== "public-offering-proxy") {
-    throw new Error("DILUTION_POLICY 必須是 strict 或 public-offering-proxy");
-  }
   return {
     minDiscountPercent: numericEnv("MIN_DISCOUNT_PERCENT", 20),
     minSafetyMarginPercent: numericEnv("MIN_SAFETY_MARGIN_PERCENT", 10),
-    dilutionPolicy,
   };
 }
 
