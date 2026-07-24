@@ -51,6 +51,8 @@ jobs:
       LINE_TARGET_ID_005: ${{ secrets.LINE_TARGET_ID_005 }}
       MIN_DISCOUNT_PERCENT: "20"
       MIN_SAFETY_MARGIN_PERCENT: "10"
+      HTTP_MIN_INTERVAL_MS: "1500"
+      ENABLE_MOPS_FETCH: ${{ vars.ENABLE_MOPS_FETCH || 'false' }}
       EVALUATION_DATE: ${{ github.event_name == 'workflow_dispatch' && inputs.evaluation_date || '' }}
       DILUTION_POLICY: ${{ github.event_name == 'workflow_dispatch' && inputs.dilution_policy || 'strict' }}
       FORCE_RESEND: ${{ github.event_name == 'workflow_dispatch' && inputs.force_resend || 'false' }}

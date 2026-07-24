@@ -3,7 +3,11 @@ import { pushLineMessageToRecipients } from "./clients/line.js";
 import { fetchMopsIssuance } from "./clients/mops-issuance.js";
 import { fetchQuote } from "./clients/quotes.js";
 import { fetchEndingOfferings } from "./clients/subscriptions.js";
-import { loadIssuanceOverrides, loadPolicy } from "./config.js";
+import {
+  isMopsFetchEnabled,
+  loadIssuanceOverrides,
+  loadPolicy,
+} from "./config.js";
 import { evaluateOffering } from "./domain/calculations.js";
 import type { Evaluation, EvaluationFailure } from "./domain/types.js";
 import { buildFailureMessage, buildSuccessMessage } from "./message.js";
@@ -32,6 +36,7 @@ export async function run(date: string, dryRun: boolean): Promise<string> {
     const offerings = await fetchEndingOfferings(date);
     const policy = loadPolicy();
     const overrides = await loadIssuanceOverrides();
+    const mopsFetchEnabled = isMopsFetchEnabled();
     const evaluated: Evaluation[] = [];
     const failures: EvaluationFailure[] = [];
 
@@ -45,7 +50,9 @@ export async function run(date: string, dryRun: boolean): Promise<string> {
           fetchCapitalInfo(offering.code).catch(() => undefined),
           overrides[offering.code]
             ? Promise.resolve(overrides[offering.code])
-            : fetchMopsIssuance(offering).catch(() => undefined),
+            : mopsFetchEnabled
+              ? fetchMopsIssuance(offering).catch(() => undefined)
+              : Promise.resolve(undefined),
         ]);
         evaluated.push(
           evaluateOffering(offering, quote, capital, issuance, policy),

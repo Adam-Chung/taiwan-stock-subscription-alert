@@ -40,6 +40,11 @@ the configured safety-margin result.
 - Credentials remain in GitHub Secrets and are never committed.
 - Application recipient count is unlimited. The hosted workflow explicitly
   injects five Secret slots and can be extended when needed.
+- Third-party automated access must follow current terms, robots.txt, licenses,
+  and applicable law. Requests use a conservative per-host interval.
+- MOPS automated webpage access is disabled by default because its robots.txt
+  disallows crawling; it may be enabled only after the operator confirms
+  authorization. Sourced manual overrides remain available.
 
 ## Repository
 
@@ -53,3 +58,5 @@ the configured safety-margin result.
 - MOPS announcement markup and wording are not a versioned API contract. Parsing
   therefore fails closed and reports issuance data as missing when no supported
   total-new-share wording is found.
+- Repository publication does not grant rights to third-party data, authorize
+  redistribution, or turn this rule-based tool into licensed investment advice.

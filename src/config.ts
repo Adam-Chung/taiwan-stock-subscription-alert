@@ -21,6 +21,10 @@ export async function loadIssuanceOverrides(): Promise<
   return JSON.parse(await readFile(url, "utf8")) as Record<string, IssuanceOverride>;
 }
 
+export function isMopsFetchEnabled(): boolean {
+  return process.env.ENABLE_MOPS_FETCH === "true";
+}
+
 function numericEnv(name: string, fallback: number): number {
   const raw = process.env[name];
   if (raw === undefined) return fallback;

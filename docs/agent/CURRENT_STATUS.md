@@ -1,6 +1,6 @@
 # Current Status
 
-Last updated: 2026-07-23 17:17 Asia/Taipei
+Last updated: 2026-07-24 Asia/Taipei
 
 ## Current Objective
 
@@ -73,10 +73,17 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
   price-qualified but explicitly marked as missing complete issuance data.
 - GitHub Actions Run #6 delivered the forced 2026-05-29 alert to alias `001`;
   privacy-safe history records delivery at 2026-07-23T09:27:01.951Z.
+- Public-release safety review found that TWSE terms restrict unauthorized
+  automated downloads and MOPS robots.txt disallows general crawling.
+- README now documents lawful-use, data-rights, investment-information, and
+  no-warranty boundaries. Requests are rate-limited per host, and MOPS automated
+  webpage access is default-disabled pending confirmed authorization.
+- Public-release safeguards passed 7 test files and 27 tests; the 2026-07-24
+  official-data dry run completed successfully with MOPS disabled by default.
 
 ## Evidence
 
-- `npm run check`: 6 test files and 25 tests passed.
+- `npm run check`: 7 test files and 27 tests passed.
 - Live official endpoints returned HTTP 200 and expected fields on 2026-07-23.
 - `npm run dry-run`: successful no-offering heartbeat produced.
 - `git diff --check`: passed.
@@ -86,12 +93,15 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 
 - MOPS announcement HTML and prose can change without an API schema guarantee;
   unsupported wording fails closed and can use a sourced manual override.
+- Rate limiting and disclaimers do not create legal permission. Public operation,
+  redistribution, commercial use, or MOPS automation require a fresh terms and
+  licensing review and may require written authorization or legal advice.
 - Real LINE delivery and GitHub schedule activation require user-owned LINE
   Secrets.
 
 ## Next Action
 
-Monitor the next scheduled weekday run.
+Monitor the next scheduled run and re-check source terms before public release.
 
 ## Loop Controls
 

@@ -79,3 +79,31 @@
 - Consequences: Unsupported or changed MOPS wording fails closed and is reported
   as missing issuance data.
 - Supersedes: manual-only issuance lookup in DEC-002
+
+## DEC-007: Default-disable MOPS automation for public-release safety
+
+- Date: 2026-07-24
+- Status: accepted
+- Context: MOPS robots.txt disallows general automated crawling, and TWSE website
+  terms restrict automated downloads without permission.
+- Decision: Keep MOPS automated webpage access disabled unless the operator
+  explicitly sets `ENABLE_MOPS_FETCH=true` after confirming authorization. Keep
+  sourced manual overrides and incomplete-data reporting as safe fallbacks.
+- Reason: A disclaimer and slower requests reduce neither contractual nor legal
+  authorization requirements.
+- Consequences: Without authorization or overrides, complete issuance fields may
+  be unavailable and price-qualified stocks are labelled incomplete.
+- Supersedes: DEC-006 always-on MOPS lookup
+
+## DEC-008: Enforce conservative per-host request spacing
+
+- Date: 2026-07-24
+- Status: accepted
+- Context: Public code should avoid concentrated automated traffic.
+- Decision: Space outbound data requests by host with a 1,500 ms default and
+  reject configurations below 500 ms.
+- Reason: This provides a deterministic minimum load safeguard while preserving
+  low-frequency daily operation.
+- Consequences: Runs take slightly longer; rate limiting still does not grant
+  access or redistribution rights.
+- Supersedes: none

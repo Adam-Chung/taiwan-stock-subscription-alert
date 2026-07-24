@@ -1,6 +1,6 @@
 # Handoff
 
-Last updated: 2026-07-23 17:17 Asia/Taipei
+Last updated: 2026-07-24 Asia/Taipei
 
 ## Resume Here
 
@@ -36,6 +36,11 @@ Configure `LINE_CHANNEL_ACCESS_TOKEN` and one or more
   heartbeat and the privacy-safe delivery marker was persisted
 - GitHub Actions Run #6: succeeded; alias `001` received the forced 2026-05-29
   alert containing two price-qualified, issuance-incomplete offerings
+- Public-release safeguards added: README disclaimer and source-specific legal
+  boundaries, 1,500 ms per-host request spacing, and default-disabled MOPS
+  webpage automation.
+- Verification: 7 test files and 27 tests passed; 2026-07-24 official-data dry
+  run passed with MOPS disabled.
 - Historical real-delivery test: Run #2 succeeded for 2026-07-22; alias `001`
   recorded as sent
 - Not yet verified: GitHub-hosted execution and real LINE delivery
@@ -44,6 +49,8 @@ Configure `LINE_CHANNEL_ACCESS_TOKEN` and one or more
 
 - MOPS format changes may require parser updates; sourced overrides remain the
   fallback.
+- Do not enable MOPS automation merely because the code is public or rate-limited.
+  Record confirmed authorization first.
 - LINE Secrets and GitHub remote require user-owned external setup.
 
 ## Working Boundaries
