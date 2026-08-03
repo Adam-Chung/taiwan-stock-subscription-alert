@@ -1,6 +1,6 @@
 # Current Status
 
-Last updated: 2026-07-24 Asia/Taipei
+Last updated: 2026-08-03 Asia/Taipei
 
 ## Current Objective
 
@@ -8,8 +8,8 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 
 ## Current State
 
-- Phase: record
-- Active task: TASK-006
+- Phase: complete
+- Active task: TASK-018
 - Owner: primary agent
 
 ## Confirmed Progress
@@ -75,8 +75,7 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 - Public-release safety review found that TWSE terms restrict unauthorized
   automated downloads and MOPS robots.txt disallows general crawling.
 - README now documents lawful-use, data-rights, investment-information, and
-  no-warranty boundaries. Requests are rate-limited per host, and MOPS automated
-  webpage access is default-disabled pending confirmed authorization.
+  no-warranty boundaries. Requests are rate-limited per host.
 - Public-release safeguards passed 7 test files and 27 tests; the 2026-07-24
   official-data dry run completed successfully with MOPS disabled by default.
 - Public-underwriting proxy calculations, configuration, workflow inputs,
@@ -85,10 +84,39 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 - Proxy removal verification passed 7 test files and 26 tests. The 2026-05-29
   dry run still reported both price-qualified offerings with blank dilution and
   safety-margin fields.
+- Initial-listing quote fallback now uses the government-open-data licensed TPEx
+  OpenAPI instead of attempting to scrape the TPEx market webpage.
+- Incomplete cases retain subscription price, public-underwriting shares,
+  allotment date, market type, and a specific failure reason.
+- The 2026-08-03 live dry run evaluated 7855 Hotai Leasing from its latest
+  emerging-market quote and classified it as price-qualified with incomplete
+  issuance data; no LINE message or delivery record was produced.
+- TPEx emerging-company open data supplied 7855's issued common shares before
+  the later MOPS parser expansion resolved its complete new-issuance share count.
+- Quote, issued-share, and new-issuance retrieval now settle independently. A
+  failed source no longer discards facts returned successfully by other sources.
+- Price-qualified and incomplete-case messages display original issued common
+  shares. Failure cases also display any complete new-issuance count and derive
+  post-issue shares and dilution whenever both share counts are available.
+- Per the user's explicit decision, MOPS lookup is now default-enabled locally
+  and in GitHub Actions, with `ENABLE_MOPS_FETCH=false` retained as a stop switch.
+- Initial-listing board-resolution and underwriting-price announcements are now
+  candidates for complete issuance parsing. The live 7855 price announcement
+  resolved 84,777,000 new shares and 30.57% dilution.
 
 ## Evidence
 
 - `npm run check`: 7 test files and 26 tests passed after proxy removal.
+- `npm run check`: 9 test files and 30 tests passed for TASK-017.
+- `npm run check`: 10 test files and 32 tests passed after partial-data
+  preservation was added.
+- `npm run check`: 10 test files and 36 tests passed after expanding and enabling
+  the MOPS initial-listing announcement lookup.
+- The 2026-08-03 live dry run resolved 7855 with 192,527,928 original shares,
+  84,777,000 new shares, 277,304,928 post-issue shares, and 30.57% dilution.
+- The 2026-08-03 live dry run evaluated 7855 at a 95.7 latest emerging-market
+  trade, 42 underwriting price, 56.11% discount, and 192,527,928 original
+  issued common shares without sending LINE.
 - Live official endpoints returned HTTP 200 and expected fields on 2026-07-23.
 - `npm run dry-run`: successful no-offering heartbeat produced.
 - `git diff --check`: passed.
@@ -96,17 +124,21 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 
 ## Blockers and Risks
 
-- MOPS announcement HTML and prose can change without an API schema guarantee;
+- MOPS announcement matching now also covers initial-listing board resolutions
+  and final underwriting-price titles. Its HTML and prose can still change
+  without an API schema guarantee;
   unsupported wording fails closed and can use a sourced manual override.
-- Rate limiting and disclaimers do not create legal permission. Public operation,
-  redistribution, commercial use, or MOPS automation require a fresh terms and
-  licensing review and may require written authorization or legal advice.
+- Per the user's explicit 2026-08-03 decision, MOPS lookup is default-enabled in
+  local configuration and GitHub Actions despite the documented access risk.
+  `ENABLE_MOPS_FETCH=false` remains the immediate stop control. Rate limiting and
+  disclaimers do not create legal permission.
 - Real LINE delivery and GitHub schedule activation require user-owned LINE
   Secrets.
 
 ## Next Action
 
-Monitor the next scheduled run and re-check source terms before public release.
+Monitor the next scheduled run. A real resend of 2026-08-03 requires a separate
+human gate because it would send another LINE notification.
 
 ## Loop Controls
 

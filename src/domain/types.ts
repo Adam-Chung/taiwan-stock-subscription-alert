@@ -8,6 +8,7 @@ export interface SubscriptionOffering {
   actualUnderwritingPrice: number;
   actualUnderwritingShares: number;
   totalUnderwritingAmount: number;
+  allotmentDate: string;
   cancelled: boolean;
 }
 
@@ -17,6 +18,7 @@ export interface Quote {
   market: Market;
   currentPrice: number;
   previousClose?: number;
+  previousPriceKind?: "close" | "average";
   quotedAt: string;
   usedPreviousClose: boolean;
 }
@@ -37,6 +39,7 @@ export interface Evaluation {
   discountPercent: number;
   dailyChangeAmount?: number;
   dailyChangePercent?: number;
+  issuedCommonShares?: number;
   totalNewShares?: number;
   postIssueTotalShares?: number;
   scalePercent?: number;
@@ -50,4 +53,6 @@ export interface Evaluation {
 export interface EvaluationFailure {
   offering: SubscriptionOffering;
   reason: string;
+  capital?: CapitalInfo;
+  issuance?: IssuanceOverride;
 }

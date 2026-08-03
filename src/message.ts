@@ -1,6 +1,7 @@
 import type { Evaluation, EvaluationFailure } from "./domain/types.js";
 import { formatInteger, formatMoney, formatPercent, signed } from "./lib/format.js";
 
+/** 建立當日申購評估結果，並保留無法完成評估案件的已知申購資料。 */
 export function buildSuccessMessage(
   date: string,
   evaluated: Evaluation[],
@@ -18,7 +19,9 @@ export function buildSuccessMessage(
     "",
     "程式執行成功",
     `今日申購截止案件：${evaluated.length + failures.length} 檔`,
-    `完成評估：${evaluated.length} 檔`,
+    `已處理案件：${evaluated.length + failures.length} 檔`,
+    `可完成價格評估：${evaluated.length} 檔`,
+    `缺少必要資料：${failures.length} 檔`,
     `符合條件：${recommended.length} 檔`,
     `完整符合：${complete.length} 檔`,
     `價差符合、發行資料不足：${priceOnly.length} 檔`,
@@ -29,6 +32,7 @@ export function buildSuccessMessage(
   } else {
     for (const item of recommended) {
       const hasCompleteIssuance = item.scaleKind === "dilution";
+      const isEmerging = item.quote.market === "emerging";
       header.push(
         "",
         `${item.offering.code} ${item.offering.name}`,
@@ -38,17 +42,23 @@ export function buildSuccessMessage(
             : "價差符合，但發行資料不足"
         }`,
         "申購截止：今天",
+        `撥券日期（上市／上櫃日期）：${item.offering.allotmentDate}`,
+        `公開承銷股數：${formatInteger(item.offering.actualUnderwritingShares)} 股`,
         "",
         `價格時間：${formatQuoteTime(item.quote.quotedAt)}`,
-        `目前股價：${formatMoney(item.quote.currentPrice)} 元${
-          item.quote.usedPreviousClose ? "（今日尚無成交，使用前收）" : ""
+        `${isEmerging ? "興櫃最近成交價" : "目前股價"}：${formatMoney(item.quote.currentPrice)} 元${
+          item.quote.usedPreviousClose
+            ? isEmerging
+              ? "（最近交易日無成交，使用前日均價）"
+              : "（今日尚無成交，使用前收）"
+            : ""
         }`,
-        `前一交易日收盤價：${
+        `${item.quote.previousPriceKind === "average" ? "前一交易日平均價" : "前一交易日收盤價"}：${
           item.quote.previousClose === undefined
             ? "資料不足"
             : `${formatMoney(item.quote.previousClose)} 元`
         }`,
-        `今日漲跌：${
+        `${item.quote.previousPriceKind === "average" ? "較前日均價" : "今日漲跌"}：${
           item.dailyChangeAmount === undefined ||
           item.dailyChangePercent === undefined
             ? "無法計算"
@@ -60,6 +70,7 @@ export function buildSuccessMessage(
         `實際承銷價：${formatMoney(item.offering.actualUnderwritingPrice)} 元`,
         `市價折價率：${formatPercent(item.discountPercent)}`,
         "",
+        `原已發行普通股數：${formatOptionalShares(item.issuedCommonShares)}`,
         `本次新增股數：${
           item.totalNewShares === undefined
             ? ""
@@ -96,6 +107,15 @@ export function buildSuccessMessage(
       ...failures.flatMap((item) => [
         "",
         `${item.offering.code} ${item.offering.name}`,
+        `案件類型：${item.offering.issueMarketLabel}`,
+        `申購截止：${item.offering.subscriptionEndDate}`,
+        `撥券日期（上市／上櫃日期）：${item.offering.allotmentDate}`,
+        `實際承銷價：${formatOptionalMoney(item.offering.actualUnderwritingPrice)}`,
+        `公開承銷股數：${formatOptionalShares(item.offering.actualUnderwritingShares)}`,
+        `原已發行普通股數：${formatOptionalShares(item.capital?.issuedCommonShares)}`,
+        `整次新增發行股數：${formatOptionalShares(item.issuance?.totalNewShares)}`,
+        `發行後總股數：${formatPostIssueShares(item)}`,
+        `股數稀釋率：${formatFailureDilution(item)}`,
         `原因：${item.reason}`,
         `公告資訊：https://goodinfo.tw/tw/StockAnnounceList.asp?STOCK_ID=${encodeURIComponent(
           item.offering.code,
@@ -107,6 +127,7 @@ export function buildSuccessMessage(
   return header.join("\n");
 }
 
+/** 將外部行情日期轉成適合 LINE 閱讀的斜線格式。 */
 function formatQuoteTime(value: string): string {
   if (!value) return "未提供";
   const match = value.match(/^(\d{4})(\d{2})(\d{2})(.*)$/);
@@ -115,6 +136,39 @@ function formatQuoteTime(value: string): string {
     : value;
 }
 
+/** 格式化可能尚未確定的承銷價。 */
+function formatOptionalMoney(value: number): string {
+  return Number.isFinite(value) && value > 0
+    ? `${formatMoney(value)} 元`
+    : "資料不足";
+}
+
+/** 格式化可能缺失的公開承銷股數。 */
+function formatOptionalShares(value: number | undefined): string {
+  return value !== undefined && Number.isFinite(value) && value > 0
+    ? `${formatInteger(value)} 股`
+    : "資料不足";
+}
+
+/** 在部分失敗案件同時具備原股本與新增股數時，顯示可驗證的發行後股數。 */
+function formatPostIssueShares(item: EvaluationFailure): string {
+  const issued = item.capital?.issuedCommonShares;
+  const added = item.issuance?.totalNewShares;
+  return issued !== undefined && added !== undefined
+    ? `${formatInteger(issued + added)} 股`
+    : "資料不足";
+}
+
+/** 在部分失敗案件具備完整股數時，仍提供稀釋率供使用者判讀。 */
+function formatFailureDilution(item: EvaluationFailure): string {
+  const issued = item.capital?.issuedCommonShares;
+  const added = item.issuance?.totalNewShares;
+  return issued !== undefined && added !== undefined
+    ? `${((added / (issued + added)) * 100).toFixed(2)}%`
+    : "資料不足";
+}
+
+/** 建立整體資料來源失敗時的 LINE 異常通知。 */
 export function buildFailureMessage(date: string, reason: string): string {
   return [
     `【台股申購提醒｜${date}｜執行異常】`,

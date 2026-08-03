@@ -17,7 +17,9 @@ the configured safety-margin result.
 - Attempt every configured recipient independently; one failure must not block
   other recipients.
 - Persist recipient alias and SHA-256 fingerprint only, never the raw userId.
-- Include current price and change from the previous trading day's close.
+- For listed and OTC stocks, include current price and change from the previous
+  trading day's close. For emerging stocks, clearly label the latest available
+  trade and its change from the previous trading day's average.
 - Discount must be greater than 20%.
 - Discount minus issuance-scale percentage must be greater than 10 percentage
   points.
@@ -26,7 +28,11 @@ the configured safety-margin result.
   report the stock even when total new shares or issued common shares are
   unavailable. Label it as price-qualified with issuance data missing.
 - Missing previous close only suppresses daily-change calculation. Missing both
-  traded price and previous close makes the offering unevaluable.
+  traded price and previous close makes the offering unevaluable, but the
+  message must retain every independently available fact, including subscription
+  price, public-underwriting shares, allotment date, issued common shares, and
+  complete new-issuance shares. Derived share totals and dilution remain
+  available whenever their required share counts are complete.
 
 ## Current Technical Decisions
 
@@ -43,6 +49,9 @@ the configured safety-margin result.
   injects five Secret slots and can be extended when needed.
 - Third-party automated access must follow current terms, robots.txt, licenses,
   and applicable law. Requests use a conservative per-host interval.
+- Emerging quotes and company capital use TPEx OpenAPI datasets listed by the
+  government open-data platform under Open Government Data License 1.0; the
+  application does not scrape TPEx market-page HTML.
 - MOPS automated webpage access is disabled by default because its robots.txt
   disallows crawling; it may be enabled only after the operator confirms
   authorization. Sourced manual overrides remain available.

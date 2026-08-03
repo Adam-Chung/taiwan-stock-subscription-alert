@@ -17,6 +17,7 @@ import {
   recordSuccessfulDeliveries,
 } from "./run-history.js";
 
+/** 評估指定日期案件並在非 dry run 時推送 LINE 與記錄成功收件者。 */
 export async function run(date: string, dryRun: boolean): Promise<string> {
   const forceResend = process.env.FORCE_RESEND === "true";
   const recipients = dryRun ? [] : loadRecipients();
@@ -41,28 +42,52 @@ export async function run(date: string, dryRun: boolean): Promise<string> {
     const failures: EvaluationFailure[] = [];
 
     for (const offering of offerings) {
-      try {
-        if (!Number.isFinite(offering.actualUnderwritingPrice)) {
-          throw new Error("實際承銷價尚未確定");
-        }
-        const [quote, capital, issuance] = await Promise.all([
+      const [quoteResult, capitalResult, issuanceResult] =
+        await Promise.allSettled([
           fetchQuote(offering),
-          fetchCapitalInfo(offering.code).catch(() => undefined),
+          fetchCapitalInfo(offering.code),
           overrides[offering.code]
             ? Promise.resolve(overrides[offering.code])
             : mopsFetchEnabled
-              ? fetchMopsIssuance(offering).catch(() => undefined)
+              ? fetchMopsIssuance(offering)
               : Promise.resolve(undefined),
         ]);
-        evaluated.push(
-          evaluateOffering(offering, quote, capital, issuance, policy),
-        );
-      } catch (error) {
+      const capital =
+        capitalResult.status === "fulfilled" ? capitalResult.value : undefined;
+      const issuance =
+        issuanceResult.status === "fulfilled" ? issuanceResult.value : undefined;
+
+      if (!Number.isFinite(offering.actualUnderwritingPrice)) {
         failures.push({
           offering,
-          reason: error instanceof Error ? error.message : String(error),
+          reason: "實際承銷價尚未確定",
+          ...(capital ? { capital } : {}),
+          ...(issuance ? { issuance } : {}),
         });
+        continue;
       }
+      if (quoteResult.status === "rejected") {
+        failures.push({
+          offering,
+          reason:
+            quoteResult.reason instanceof Error
+              ? quoteResult.reason.message
+              : String(quoteResult.reason),
+          ...(capital ? { capital } : {}),
+          ...(issuance ? { issuance } : {}),
+        });
+        continue;
+      }
+
+      evaluated.push(
+        evaluateOffering(
+          offering,
+          quoteResult.value,
+          capital,
+          issuance,
+          policy,
+        ),
+      );
     }
 
     message = buildSuccessMessage(date, evaluated, failures);

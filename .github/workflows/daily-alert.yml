@@ -44,7 +44,7 @@ jobs:
       MIN_DISCOUNT_PERCENT: "20"
       MIN_SAFETY_MARGIN_PERCENT: "10"
       HTTP_MIN_INTERVAL_MS: "1500"
-      ENABLE_MOPS_FETCH: ${{ vars.ENABLE_MOPS_FETCH || 'false' }}
+      ENABLE_MOPS_FETCH: ${{ vars.ENABLE_MOPS_FETCH || 'true' }}
       EVALUATION_DATE: ${{ github.event_name == 'workflow_dispatch' && inputs.evaluation_date || '' }}
       FORCE_RESEND: ${{ github.event_name == 'workflow_dispatch' && inputs.force_resend || 'false' }}
       DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || 'false' }}

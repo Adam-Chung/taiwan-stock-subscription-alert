@@ -37,8 +37,7 @@ Configure `LINE_CHANNEL_ACCESS_TOKEN` and one or more
 - GitHub Actions Run #6: succeeded; alias `001` received the forced 2026-05-29
   alert containing two price-qualified, issuance-incomplete offerings
 - Public-release safeguards added: README disclaimer and source-specific legal
-  boundaries, 1,500 ms per-host request spacing, and default-disabled MOPS
-  webpage automation.
+  boundaries and 1,500 ms per-host request spacing.
 - Verification: 7 test files and 27 tests passed; 2026-07-24 official-data dry
   run passed with MOPS disabled.
 - Public-underwriting proxy mode removed from runtime policy, calculations,
@@ -52,8 +51,8 @@ Configure `LINE_CHANNEL_ACCESS_TOKEN` and one or more
 
 - MOPS format changes may require parser updates; sourced overrides remain the
   fallback.
-- Do not enable MOPS automation merely because the code is public or rate-limited.
-  Record confirmed authorization first.
+- MOPS lookup is default-enabled by explicit user decision. Do not bypass access
+  denial or technical restrictions; set `ENABLE_MOPS_FETCH=false` to stop it.
 - LINE Secrets and GitHub remote require user-owned external setup.
 
 ## Working Boundaries

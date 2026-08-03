@@ -73,6 +73,9 @@ export function evaluateOffering(
     discountPercent,
     ...(dailyChangeAmount !== undefined ? { dailyChangeAmount } : {}),
     ...(dailyChangePercent !== undefined ? { dailyChangePercent } : {}),
+    ...(capital?.issuedCommonShares !== undefined
+      ? { issuedCommonShares: capital.issuedCommonShares }
+      : {}),
     ...(totalNewShares !== undefined ? { totalNewShares } : {}),
     ...(postIssueTotalShares !== undefined ? { postIssueTotalShares } : {}),
     ...(scalePercent !== undefined ? { scalePercent } : {}),

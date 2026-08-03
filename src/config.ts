@@ -17,7 +17,7 @@ export async function loadIssuanceOverrides(): Promise<
 }
 
 export function isMopsFetchEnabled(): boolean {
-  return process.env.ENABLE_MOPS_FETCH === "true";
+  return process.env.ENABLE_MOPS_FETCH !== "false";
 }
 
 function numericEnv(name: string, fallback: number): number {

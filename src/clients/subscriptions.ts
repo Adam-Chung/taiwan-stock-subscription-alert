@@ -16,6 +16,7 @@ const SUPPORTED_MARKETS = new Set([
   "創新板初上市",
 ]);
 
+/** 取得指定日期截止、未取消且屬支援市場的公開申購案件。 */
 export async function fetchEndingOfferings(
   isoDate: string,
 ): Promise<SubscriptionOffering[]> {
@@ -34,6 +35,7 @@ export async function fetchEndingOfferings(
     );
 }
 
+/** 將證交所公開申購資料列轉成領域模型，並保留撥券或掛牌日期。 */
 function parseRow(row: string[]): SubscriptionOffering {
   const get = (index: number): string => row[index]?.trim() ?? "";
   const actualPrice = parseNumber(get(10));
@@ -45,10 +47,12 @@ function parseRow(row: string[]): SubscriptionOffering {
     actualUnderwritingPrice: actualPrice,
     actualUnderwritingShares: parseNumber(get(8)),
     totalUnderwritingAmount: parseNumber(get(14)),
+    allotmentDate: get(11) ? rocDateToIso(get(11)) : "",
     cancelled: get(17) !== "",
   };
 }
 
+/** 將含千分位的公開申購數值轉成 number，未定值則回傳 NaN。 */
 function parseNumber(value: string): number {
   if (!value || value === "---" || value === "未訂出") return Number.NaN;
   return Number(value.replaceAll(",", ""));

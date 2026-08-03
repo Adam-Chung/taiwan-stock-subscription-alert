@@ -108,6 +108,25 @@
   access or redistribution rights.
 - Supersedes: none
 
+## DEC-010: Enable low-frequency MOPS lookup by explicit user decision
+
+- Date: 2026-08-03
+- Status: accepted
+- Context: The user explicitly requested that the application fetch complete
+  issuance shares from MOPS despite the documented robots.txt and authorization
+  uncertainty.
+- Decision: Enable MOPS lookup by default locally and in GitHub Actions. Keep
+  conservative per-host spacing, fail-closed parsing, no access-control bypass,
+  and `ENABLE_MOPS_FETCH=false` as an immediate stop switch.
+- Reason: Complete issuance shares materially improve subscription evaluation,
+  and 7855 demonstrates that initial-listing announcements contain the needed
+  total share count.
+- Consequences: The application can calculate complete dilution more often, but
+  enabling access does not establish legal authorization and may stop working if
+  MOPS rejects or changes the requests.
+- Supersedes: DEC-007 default-disabled runtime behavior; its risk assessment
+  remains applicable.
+
 ## DEC-009: Remove public-underwriting proxy calculations
 
 - Date: 2026-07-24

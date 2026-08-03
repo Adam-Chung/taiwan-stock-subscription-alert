@@ -10,6 +10,7 @@ const offering: SubscriptionOffering = {
   actualUnderwritingPrice: 60,
   actualUnderwritingShares: 10_000,
   totalUnderwritingAmount: 600_000,
+  allotmentDate: "2026-07-30",
   cancelled: false,
 };
 const quote: Quote = {
@@ -37,6 +38,7 @@ describe("evaluateOffering", () => {
     );
     expect(result.discountPercent).toBeCloseTo(40);
     expect(result.dailyChangePercent).toBeCloseTo(5.2632);
+    expect(result.issuedCommonShares).toBe(90_000);
     expect(result.scalePercent).toBeCloseTo(10);
     expect(result.safetyMarginPercent).toBeCloseTo(30);
     expect(result.recommendationKind).toBe("complete");
@@ -51,6 +53,7 @@ describe("evaluateOffering", () => {
     expect(result.recommendationKind).toBe("price-only");
     expect(result.recommended).toBe(true);
     expect(result.scalePercent).toBeUndefined();
+    expect(result.issuedCommonShares).toBe(90_000);
     expect(result.safetyMarginPercent).toBeUndefined();
     expect(result.warning).toContain("缺少整次新增發行股數");
   });

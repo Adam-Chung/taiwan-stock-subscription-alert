@@ -12,16 +12,16 @@ afterEach(() => {
 });
 
 describe("MOPS fetch authorization gate", () => {
-  it("defaults to disabled", () => {
+  it("依使用者決定預設啟用", () => {
     delete process.env.ENABLE_MOPS_FETCH;
-    expect(isMopsFetchEnabled()).toBe(false);
+    expect(isMopsFetchEnabled()).toBe(true);
   });
 
-  it("requires an explicit true value", () => {
+  it("可用明確的 false 停用", () => {
+    process.env.ENABLE_MOPS_FETCH = "false";
+    expect(isMopsFetchEnabled()).toBe(false);
+
     process.env.ENABLE_MOPS_FETCH = "true";
     expect(isMopsFetchEnabled()).toBe(true);
-
-    process.env.ENABLE_MOPS_FETCH = "TRUE";
-    expect(isMopsFetchEnabled()).toBe(false);
   });
 });
