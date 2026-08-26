@@ -5,7 +5,7 @@ type CompanyRow = Record<string, string>;
 
 const ENDPOINTS = [
   "https://openapi.twse.com.tw/v1/opendata/t187ap03_L",
-  "https://openapi.twse.com.tw/v1/opendata/t187ap03_O",
+  "https://www.tpex.org.tw/openapi/v1/mopsfin_t187ap03_O",
   "https://openapi.twse.com.tw/v1/opendata/t187ap03_P",
   "https://www.tpex.org.tw/openapi/v1/mopsfin_t187ap03_R",
 ];

@@ -1,6 +1,6 @@
 # Handoff
 
-Last updated: 2026-07-24 Asia/Taipei
+Last updated: 2026-08-26 Asia/Taipei
 
 ## Resume Here
 
@@ -43,6 +43,9 @@ Configure `LINE_CHANNEL_ACCESS_TOKEN` and one or more
 - Public-underwriting proxy mode removed from runtime policy, calculations,
   workflow inputs, environment configuration, tests, and README. Missing complete
   issuance data remains price-only and does not produce dilution values.
+- Updated OTC company capital to the current TPEx OpenAPI endpoint and simplified
+  the LINE summary. Live 8421 verification resolved 54,817,140 original shares,
+  9,000,000 new shares, and 63,817,140 post-issue shares.
 - Historical real-delivery test: Run #2 succeeded for 2026-07-22; alias `001`
   recorded as sent
 - Not yet verified: GitHub-hosted execution and real LINE delivery

@@ -37,6 +37,14 @@ it("通知包含目前股價、前收、今日漲跌幅與股票公告連結", (
     recommended: true,
   } satisfies Evaluation;
   const message = buildSuccessMessage("2026-07-23", [item], []);
+  expect(message).toContain("執行成功");
+  expect(message).toContain("今日截止：1 檔");
+  expect(message).toContain("完整符合：1 檔");
+  expect(message).toContain("僅價差符合：0 檔");
+  expect(message).toContain("資料不足：0 檔");
+  expect(message).not.toContain("已處理案件");
+  expect(message).not.toContain("可完成價格評估");
+  expect(message).not.toContain("缺少必要資料");
   expect(message).toContain("目前股價：100 元");
   expect(message).toContain("價格時間：2026/07/23 10:30:00");
   expect(message).toContain("前一交易日收盤價：95 元");
@@ -50,6 +58,12 @@ it("通知包含目前股價、前收、今日漲跌幅與股票公告連結", (
   expect(message).toContain(
     "公告資訊：https://goodinfo.tw/tw/StockAnnounceList.asp?STOCK_ID=1234",
   );
+});
+
+it("沒有入選股票時使用簡短易懂的說明", () => {
+  const message = buildSuccessMessage("2026-08-26", [], []);
+  expect(message).toContain("今日沒有符合篩選條件的股票。");
+  expect(message).not.toContain("今日沒有完整評估後符合條件的股票。");
 });
 
 it("價差符合但發行資料不足時保留發行欄位空白", () => {

@@ -17,18 +17,15 @@ export function buildSuccessMessage(
   const header = [
     `【台股申購提醒｜${date}】`,
     "",
-    "程式執行成功",
-    `今日申購截止案件：${evaluated.length + failures.length} 檔`,
-    `已處理案件：${evaluated.length + failures.length} 檔`,
-    `可完成價格評估：${evaluated.length} 檔`,
-    `缺少必要資料：${failures.length} 檔`,
-    `符合條件：${recommended.length} 檔`,
+    "執行成功",
+    `今日截止：${evaluated.length + failures.length} 檔`,
     `完整符合：${complete.length} 檔`,
-    `價差符合、發行資料不足：${priceOnly.length} 檔`,
+    `僅價差符合：${priceOnly.length} 檔`,
+    `資料不足：${failures.length} 檔`,
   ];
 
   if (recommended.length === 0) {
-    header.push("", "今日沒有完整評估後符合條件的股票。");
+    header.push("", "今日沒有符合篩選條件的股票。");
   } else {
     for (const item of recommended) {
       const hasCompleteIssuance = item.scaleKind === "dilution";

@@ -1,6 +1,6 @@
 # Current Status
 
-Last updated: 2026-08-03 Asia/Taipei
+Last updated: 2026-08-26 Asia/Taipei
 
 ## Current Objective
 
@@ -9,7 +9,7 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 ## Current State
 
 - Phase: complete
-- Active task: TASK-018
+- Active task: TASK-019
 - Owner: primary agent
 
 ## Confirmed Progress
@@ -103,6 +103,13 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 - Initial-listing board-resolution and underwriting-price announcements are now
   candidates for complete issuance parsing. The live 7855 price announcement
   resolved 84,777,000 new shares and 30.57% dilution.
+- The OTC capital source now uses TPEx `mopsfin_t187ap03_O`; the former TWSE
+  path returned HTML and caused all OTC company-capital lookups to fail.
+- Live 8421 verification resolved 54,817,140 original shares, 9,000,000 new
+  shares, 63,817,140 post-issue shares, and 14.10% dilution. It remained
+  unselected because discount was 19.12% and safety margin was 5.01 points.
+- LINE summary wording now shows only today-ending, complete-match, price-only,
+  and missing-data counts, followed by a shorter no-match sentence.
 
 ## Evidence
 
@@ -112,6 +119,10 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
   preservation was added.
 - `npm run check`: 10 test files and 36 tests passed after expanding and enabling
   the MOPS initial-listing announcement lookup.
+- `npm run check`: 10 test files and 37 tests passed for the OTC capital-source
+  fix and simplified LINE summary.
+- The 2026-08-26 live dry run completed two cases with no missing data and the
+  new compact summary.
 - The 2026-08-03 live dry run resolved 7855 with 192,527,928 original shares,
   84,777,000 new shares, 277,304,928 post-issue shares, and 30.57% dilution.
 - The 2026-08-03 live dry run evaluated 7855 at a 95.7 latest emerging-market
@@ -137,8 +148,7 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 
 ## Next Action
 
-Monitor the next scheduled run. A real resend of 2026-08-03 requires a separate
-human gate because it would send another LINE notification.
+Monitor the next scheduled run.
 
 ## Loop Controls
 
