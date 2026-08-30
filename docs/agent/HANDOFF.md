@@ -57,6 +57,10 @@ Configure `LINE_CHANNEL_ACCESS_TOKEN` and one or more
 - MOPS lookup is default-enabled by explicit user decision. Do not bypass access
   denial or technical restrictions; set `ENABLE_MOPS_FETCH=false` to stop it.
 - LINE Secrets and GitHub remote require user-owned external setup.
+- TASK-020 Cloudflare Worker, `ALERT_HISTORY`, encrypted LINE secrets, and the
+  12:30/13:00 weekday Cron Triggers are deployed. Observe the next production
+  run, confirm LINE delivery and KV state, and review Worker CPU usage before
+  marking the migration complete.
 
 ## Working Boundaries
 

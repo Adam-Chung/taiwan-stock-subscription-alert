@@ -36,15 +36,17 @@ the configured safety-margin result.
 
 ## Current Technical Decisions
 
-- TypeScript on Node.js.
-- Private GitHub repository and GitHub Actions free allowance.
-- Two weekday schedules with a persisted daily marker to prevent duplicate LINE
-  notifications.
+- TypeScript shared by the local Node.js runner and Cloudflare Worker.
+- Cloudflare Worker Free plan is the production scheduler; GitHub Actions is a
+  manual diagnostic fallback only.
+- Weekday Cloudflare schedules run at 12:30 and 13:00 Asia/Taipei. Cloudflare KV
+  stores privacy-safe delivery markers, and 13:15 is the hard send deadline.
 - Complete new-share counts are required for dilution and safety-margin
   calculations. Public-underwriting shares are never used as a proxy. Counts
   come from authorized MOPS access or sourced entries in
   `config/issuance-overrides.json`.
-- Credentials remain in GitHub Secrets and are never committed.
+- Credentials remain in Cloudflare encrypted secrets or GitHub Secrets and are
+  never committed.
 - Application recipient count is unlimited. The hosted workflow explicitly
   injects five Secret slots and can be extended when needed.
 - Third-party automated access must follow current terms, robots.txt, licenses,
@@ -63,7 +65,9 @@ the configured safety-margin result.
 
 ## External Boundaries
 
-- GitHub-hosted schedules are best-effort and can be delayed.
+- No external scheduler provides a 100% delivery guarantee. The primary and
+  backup Cloudflare Cron runs reduce risk, while the 13:15 deadline prevents
+  stale alerts.
 - TWSE MIS is used only for a private, low-volume personal alert.
 - MOPS announcement markup and wording are not a versioned API contract. Parsing
   therefore fails closed and reports issuance data as missing when no supported

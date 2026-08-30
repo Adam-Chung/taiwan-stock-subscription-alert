@@ -5,16 +5,22 @@
   "type": "module",
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "build:worker": "tsc -p tsconfig.worker.json && wrangler deploy --dry-run --outdir .wrangler-dist",
     "test": "vitest run",
-    "check": "npm run build && npm test",
+    "check": "npm run build && npm run build:worker && npm test",
     "start": "node dist/index.js",
     "dev": "tsx src/index.ts",
-    "dry-run": "tsx src/index.ts --dry-run"
+    "dry-run": "tsx src/index.ts --dry-run",
+    "worker:dev": "wrangler dev --test-scheduled",
+    "worker:deploy": "wrangler deploy",
+    "worker:tail": "wrangler tail"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260830.1",
     "@types/node": "^24.0.0",
     "tsx": "^4.20.0",
     "typescript": "^5.9.0",
-    "vitest": "^3.2.0"
+    "vitest": "^3.2.0",
+    "wrangler": "^4.127.1"
   }
 }

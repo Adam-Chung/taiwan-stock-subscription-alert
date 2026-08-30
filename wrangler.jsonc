@@ -1,0 +1,32 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "taiwan-stock-subscription-alert",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-08-30",
+  "compatibility_flags": [
+    "nodejs_compat",
+    "nodejs_compat_populate_process_env"
+  ],
+  "observability": {
+    "enabled": true
+  },
+  "triggers": {
+    "crons": [
+      "30 4 * * 1-5",
+      "0 5 * * 1-5"
+    ]
+  },
+  "vars": {
+    "LATEST_SEND_TIME": "13:15",
+    "MIN_DISCOUNT_PERCENT": "20",
+    "MIN_SAFETY_MARGIN_PERCENT": "10",
+    "HTTP_MIN_INTERVAL_MS": "1500",
+    "ENABLE_MOPS_FETCH": "true"
+  },
+  "kv_namespaces": [
+    {
+      "binding": "ALERT_HISTORY",
+      "id": "98bee21983204146bf9afe3afe0abc34"
+    }
+  ]
+}

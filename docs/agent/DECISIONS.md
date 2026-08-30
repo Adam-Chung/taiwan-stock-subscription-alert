@@ -141,3 +141,20 @@
 - Consequences: Missing complete issuance data remains `price-only`, with blank
   issuance and safety-margin fields.
 - Supersedes: The lower-bound proxy option in DEC-002
+
+## DEC-011: Run deadline-sensitive alerts directly on Cloudflare Worker
+
+- Date: 2026-08-30
+- Status: accepted
+- Context: Recent GitHub scheduled workflow events were created 9–12 hours late,
+  after the subscription alert had lost its decision value.
+- Decision: Use Cloudflare Worker Cron as the production scheduler and runtime.
+  Run at 12:30 and 13:00 Asia/Taipei, save per-recipient success markers in KV,
+  and reject all sends after 13:15. Keep GitHub Actions manual-only.
+- Reason: A business-deadline alert is successful only when delivered before
+  its deadline. A backup run and stale-send guard address both missed execution
+  and harmful late delivery.
+- Consequences: LINE credentials must also be managed as Cloudflare encrypted
+  secrets. Cloudflare remains an external dependency and cannot provide a 100%
+  delivery guarantee; live monitoring and a post-deployment run remain required.
+- Supersedes: GitHub Actions as the production scheduler in DEC-001.

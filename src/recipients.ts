@@ -9,7 +9,7 @@ export interface LineRecipient {
 const PREFIX = "LINE_TARGET_ID_";
 
 export function loadRecipients(
-  environment: NodeJS.ProcessEnv = process.env,
+  environment: Record<string, string | undefined> = process.env,
 ): LineRecipient[] {
   const recipients = Object.entries(environment)
     .filter(

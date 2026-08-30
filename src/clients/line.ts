@@ -33,7 +33,19 @@ export async function pushLineMessageToRecipients(
   message: string,
   recipients: LineRecipient[],
 ): Promise<DeliveryOutcome[]> {
-  const token = requiredEnv("LINE_CHANNEL_ACCESS_TOKEN");
+  return pushLineMessageToRecipientsWithToken(
+    message,
+    recipients,
+    requiredEnv("LINE_CHANNEL_ACCESS_TOKEN"),
+  );
+}
+
+/** 使用明確提供的 token 對多位收件者個別發送，讓不同執行環境共用。 */
+export async function pushLineMessageToRecipientsWithToken(
+  message: string,
+  recipients: LineRecipient[],
+  token: string,
+): Promise<DeliveryOutcome[]> {
   const results = await Promise.allSettled(
     recipients.map((recipient) => pushLineMessage(message, token, recipient.targetId)),
   );

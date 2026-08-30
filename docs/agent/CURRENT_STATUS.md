@@ -1,6 +1,6 @@
 # Current Status
 
-Last updated: 2026-08-26 Asia/Taipei
+Last updated: 2026-08-30 Asia/Taipei
 
 ## Current Objective
 
@@ -8,8 +8,8 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 
 ## Current State
 
-- Phase: complete
-- Active task: TASK-019
+- Phase: verification
+- Active task: TASK-020
 - Owner: primary agent
 
 ## Confirmed Progress
@@ -110,6 +110,18 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
   unselected because discount was 19.12% and safety margin was 5.01 points.
 - LINE summary wording now shows only today-ending, complete-match, price-only,
   and missing-data counts, followed by a shorter no-match sentence.
+- Cloudflare Worker is implemented as the production scheduler and directly
+  runs the shared evaluation and LINE delivery logic without GitHub Actions.
+- Cloudflare Cron runs at 12:30 and 13:00 Asia/Taipei on weekdays. KV delivery
+  markers make the second run recipient-safe, and 13:15 is a hard no-send
+  deadline for stale subscription information.
+- GitHub Actions `schedule` triggers were removed; `workflow_dispatch` remains
+  available for deliberate diagnostics and historical verification.
+- Cloudflare Worker and KV are deployed. The production deployment exposes only
+  a health response and has active weekday Cron Triggers for 12:30 and 13:00
+  Asia/Taipei.
+- Cloudflare confirms encrypted `secret_text` bindings for the LINE channel
+  token and recipient slots 001 through 003; secret values were never read.
 
 ## Evidence
 
@@ -121,6 +133,12 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
   the MOPS initial-listing announcement lookup.
 - `npm run check`: 10 test files and 37 tests passed for the OTC capital-source
   fix and simplified LINE summary.
+- `npm run check`: 11 test files and 41 tests passed for the Cloudflare Worker
+  scheduler, including bundle validation, primary/backup deduplication, partial
+  recipient retry, failure handling, and the 13:15 deadline.
+- Worker health endpoint returned `{ service: "taiwan-stock-subscription-alert",
+  ok: true }` after production deployment; Wrangler confirmed both Cron Triggers.
+- `npm audit --omit=dev`: zero vulnerabilities.
 - The 2026-08-26 live dry run completed two cases with no missing data and the
   new compact summary.
 - The 2026-08-03 live dry run resolved 7855 with 192,527,928 original shares,
@@ -145,10 +163,13 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
   disclaimers do not create legal permission.
 - Real LINE delivery and GitHub schedule activation require user-owned LINE
   Secrets.
+- Cloudflare Free plan CPU limits require a live scheduled execution before the
+  migration can be considered operationally verified.
 
 ## Next Action
 
-Monitor the next scheduled run.
+Observe the next 12:30 production Cron run and verify successful LINE delivery,
+KV recording, CPU usage, and the 13:00 duplicate-safe backup result.
 
 ## Loop Controls
 

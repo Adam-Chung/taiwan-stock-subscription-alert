@@ -1,8 +1,9 @@
 # 台股申購提醒
 
 每天在台股公開申購截止日執行規則篩選，將結果或「今日無符合標的」
-狀態透過 LINE 傳給一位或多位使用者。專案使用免費官方資料與 GitHub Actions
-免費額度，不需要付費行情或主機。
+狀態透過 LINE 傳給一位或多位使用者。正式排程由 Cloudflare Worker 直接
+執行，不經 GitHub Actions 排程；專案使用免費官方資料與 Cloudflare Free
+plan，不需要付費行情或常駐主機。
 
 ## 重要免責聲明與合法使用
 
@@ -50,8 +51,11 @@ Repository、原始碼或免責聲明不代表取得第三方網站、即時行�
 - 動態讀取所有 `LINE_TARGET_ID_<ALIAS>`，每位收件者獨立發送。
 - 單一收件者失敗不阻止其他人，備援排程只重試尚未成功者。
 - 紀錄只保存 alias 與 SHA-256 userId 雜湊，不保存原始 userId。
-- 08:10 與 11:10（Asia/Taipei）兩次免費排程；每日成功標記避免重複發送。
-- 所有憑證只從環境變數或 GitHub Secrets 讀取。
+- 12:30 主排程與 13:00 備援排程（Asia/Taipei）；Cloudflare KV 的每日成功
+  標記避免重複發送。
+- 13:15 後拒絕傳送過期申購資訊，即使排程延遲也不會在收盤後誤送。
+- 所有憑證只從本機環境變數、GitHub Secrets 或 Cloudflare encrypted
+  secrets 讀取。
 
 ## 計算規則
 
@@ -101,8 +105,9 @@ flowchart LR
     D["MOPS 現金增資重大訊息"] --> F
     I["具來源的手動備援設定"] --> F
     E --> F
-    F --> G["LINE Push 或 Dry Run"]
-    G --> H["每日成功紀錄"]
+    K["Cloudflare Cron 12:30／13:00"] --> F
+    F --> G["LINE Push 或本機 Dry Run"]
+    G --> H["Cloudflare KV 每日成功紀錄"]
 ```
 
 ## 完整新增股數
@@ -200,6 +205,47 @@ npm run dry-run
 
 Dry run 不需要 LINE 憑證，也不會發送訊息。
 
+## Cloudflare Worker 正式排程
+
+正式排程定義於 `wrangler.jsonc`，Cron 使用 UTC：
+
+- `30 4 * * 1-5`：台灣時間週一至週五 12:30 主執行。
+- `0 5 * * 1-5`：台灣時間週一至週五 13:00 備援。
+- `LATEST_SEND_TIME=13:15`：超過此時間直接失敗且不傳送申購資訊。
+
+12:30 成功後，Worker 會將每位成功收件者的 SHA-256 雜湊寫入 Cloudflare
+KV；13:00 只補送尚未成功的收件者。KV 不保存原始 LINE userId，紀錄在
+120 天後自動刪除。
+
+第一次部署需要先登入並建立 KV namespace：
+
+```powershell
+npx wrangler login
+npx wrangler kv namespace create ALERT_HISTORY
+```
+
+將命令回傳的 namespace id 填入 `wrangler.jsonc` 的 `kv_namespaces`；目前
+Repository 已填入本次建立的 namespace id。若改用其他 Cloudflare 帳號，
+必須換成該帳號新建的 id。接著將敏感值寫入 Cloudflare encrypted secrets：
+
+```powershell
+npx wrangler secret put LINE_CHANNEL_ACCESS_TOKEN
+npx wrangler secret put LINE_TARGET_ID_001
+```
+
+有其他收件者時繼續設定 `LINE_TARGET_ID_002` 至 `LINE_TARGET_ID_005`。
+Secret 只在互動提示中貼上，不能寫入命令列、`.env`、`wrangler.jsonc`、
+Repository 或操作紀錄。完成後部署：
+
+```powershell
+npm run check
+npm run worker:deploy
+```
+
+部署完成後可在 Cloudflare Dashboard 的 Worker → Triggers → Cron Triggers
+確認兩個排程，並在 Logs 或 `npm run worker:tail` 查看執行結果。公開 HTTP
+端點只回傳健康狀態，不提供遠端發送功能。
+
 所有一般資料請求預設依主機至少間隔 1,500 ms，以避免短時間集中存取。
 可用 `HTTP_MIN_INTERVAL_MS` 調高間隔；為避免不當高頻請求，低於 500 ms
 的設定會直接拒絕執行。節流不等於取得自動存取授權。
@@ -231,7 +277,7 @@ LINE_TARGET_ID_FAMILY=Uyyyyyyyy
 
 不要提交 `.env` 或任何 token。
 
-## GitHub Actions
+## GitHub Actions 手動備援
 
 在 Private Repository 的 Settings → Secrets and variables → Actions 加入：
 
@@ -248,28 +294,27 @@ Workflow 預留 `001` 至 `005` 五個槽位。若需要更多人，可繼續在
 的 `env` 加入 `LINE_TARGET_ID_006` 等 Secret；GitHub Actions 不會自動把
 所有 Repository Secrets 注入程式，因此每個 Secret 名稱仍需明確列出。
 
-Workflow 使用 UTC cron，對應台灣時間：
-
-- `10 0 * * 1-5`：08:10
-- `10 3 * * 1-5`：11:10 備援
-
-手動執行時可另外指定 `evaluation_date` 與 `force_resend`，用來重跑
+GitHub Actions 已移除 `schedule`，避免平台延遲數小時後傳送過期資訊。
+現在只保留 `workflow_dispatch`，供人工診斷或歷史資料驗證。手動執行時
+可指定 `evaluation_date` 與 `force_resend`，用來重跑
 歷史日期或驗證 LINE 版面。`force_resend=true`
 會忽略該日期既有成功紀錄並再次傳送，只應用於明確的人工測試；排程執行
 固定採當日、`strict` 與不強制重送。
 
-主要排程成功後會提交 `data/run-history.json`，只記錄每位收件者的 alias、
-SHA-256 雜湊及成功時間。備援排程只發送給當天尚未成功的收件者，因此正常
-情況每人只會收到一則 LINE。建議在 GitHub Billing 將 Actions 額外付費預算
+GitHub 手動執行仍沿用 `data/run-history.json`；它與 Cloudflare KV 是兩套
+獨立紀錄，因此正式上線後不要以 GitHub workflow 對當日執行真實發送，
+除非已確認需要人工補送。建議在 GitHub Billing 將 Actions 額外付費預算
 設為零。
 
 ## 免費額度與限制
 
-- GitHub Free 私有專案目前包含每月 Actions 免費分鐘；本專案每天兩次、
-  每次上限十分鐘，但實際通常只需數十秒。
+- Cloudflare Workers Free plan 足以容納每天兩次 Cron 的請求量；但免費方案
+  CPU 額度有限，部署後仍須以真實 Cron 執行確認資源用量與穩定性。
+- GitHub Actions 只保留人工診斷，不再承擔每日準時發送。
 - LINE 輕用量方案目前每月包含 200 則免費訊息；五位收件者每月約
   100～115 則，仍應在 LINE 後台確認當期方案與實際用量。
-- GitHub cron 是 best-effort，可能延遲，不能保證固定分鐘送達。
+- Cloudflare Cron 同樣不是金融等級 SLA；雙排程、期限防護與執行監控只能
+  降低風險，不能保證任何外部平台 100% 不故障。
 - MIS 免費資訊用於個人、低頻提醒；本專案不提供公開行情轉傳服務。
 - 所有 HTTP 資料請求採每個 host 至少 1,500 ms 的啟動間隔；這只是負載
   保護，不取代目標網站的條款、robots.txt 或授權。
@@ -284,5 +329,5 @@ npm run check
 ```
 
 目前涵蓋公式、嚴格門檻、MOPS 重大訊息與完整新增股數解析、缺少完整新增
-股數或普通股數時的價差回報、缺少前收時的降級行為、民國日期、台北時區，
-以及包含目前股價與每日漲跌的通知格式。
+股數或普通股數時的價差回報、缺少前收時的降級行為、民國日期、台北時區、
+Worker 的 12:30／13:00 去重與 13:15 期限防護，以及通知格式。

@@ -1,11 +1,6 @@
 name: Daily stock subscription alert
 
 on:
-  schedule:
-    # 08:10 and 11:10 Asia/Taipei, Monday through Friday.
-    # The second run is a free backup; run-history prevents duplicate LINE messages.
-    - cron: "10 0 * * 1-5"
-    - cron: "10 3 * * 1-5"
   workflow_dispatch:
     inputs:
       dry_run:

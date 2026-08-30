@@ -1,16 +1,11 @@
-import { fetchCapitalInfo } from "./clients/capital.js";
 import { pushLineMessageToRecipients } from "./clients/line.js";
-import { fetchMopsIssuance } from "./clients/mops-issuance.js";
-import { fetchQuote } from "./clients/quotes.js";
-import { fetchEndingOfferings } from "./clients/subscriptions.js";
 import {
   isMopsFetchEnabled,
   loadIssuanceOverrides,
   loadPolicy,
 } from "./config.js";
-import { evaluateOffering } from "./domain/calculations.js";
-import type { Evaluation, EvaluationFailure } from "./domain/types.js";
-import { buildFailureMessage, buildSuccessMessage } from "./message.js";
+import { evaluateSubscriptionDate } from "./evaluation.js";
+import { buildFailureMessage } from "./message.js";
 import { loadRecipients } from "./recipients.js";
 import {
   loadSentRecipientHashes,
@@ -34,63 +29,11 @@ export async function run(date: string, dryRun: boolean): Promise<string> {
 
   let message: string;
   try {
-    const offerings = await fetchEndingOfferings(date);
-    const policy = loadPolicy();
-    const overrides = await loadIssuanceOverrides();
-    const mopsFetchEnabled = isMopsFetchEnabled();
-    const evaluated: Evaluation[] = [];
-    const failures: EvaluationFailure[] = [];
-
-    for (const offering of offerings) {
-      const [quoteResult, capitalResult, issuanceResult] =
-        await Promise.allSettled([
-          fetchQuote(offering),
-          fetchCapitalInfo(offering.code),
-          overrides[offering.code]
-            ? Promise.resolve(overrides[offering.code])
-            : mopsFetchEnabled
-              ? fetchMopsIssuance(offering)
-              : Promise.resolve(undefined),
-        ]);
-      const capital =
-        capitalResult.status === "fulfilled" ? capitalResult.value : undefined;
-      const issuance =
-        issuanceResult.status === "fulfilled" ? issuanceResult.value : undefined;
-
-      if (!Number.isFinite(offering.actualUnderwritingPrice)) {
-        failures.push({
-          offering,
-          reason: "實際承銷價尚未確定",
-          ...(capital ? { capital } : {}),
-          ...(issuance ? { issuance } : {}),
-        });
-        continue;
-      }
-      if (quoteResult.status === "rejected") {
-        failures.push({
-          offering,
-          reason:
-            quoteResult.reason instanceof Error
-              ? quoteResult.reason.message
-              : String(quoteResult.reason),
-          ...(capital ? { capital } : {}),
-          ...(issuance ? { issuance } : {}),
-        });
-        continue;
-      }
-
-      evaluated.push(
-        evaluateOffering(
-          offering,
-          quoteResult.value,
-          capital,
-          issuance,
-          policy,
-        ),
-      );
-    }
-
-    message = buildSuccessMessage(date, evaluated, failures);
+    message = await evaluateSubscriptionDate(date, {
+      policy: loadPolicy(),
+      issuanceOverrides: await loadIssuanceOverrides(),
+      mopsFetchEnabled: isMopsFetchEnabled(),
+    });
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
     const failureMessage = buildFailureMessage(date, reason);
