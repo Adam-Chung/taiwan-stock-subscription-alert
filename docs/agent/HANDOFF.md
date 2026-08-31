@@ -56,6 +56,9 @@ Configure `LINE_CHANNEL_ACCESS_TOKEN` and one or more
   fallback.
 - MOPS lookup is default-enabled by explicit user decision. Do not bypass access
   denial or technical restrictions; set `ENABLE_MOPS_FETCH=false` to stop it.
+- LINE production delivery uses one multicast request and one daily hashed KV
+  state to remain within Cloudflare Free subrequest limits. Verify the next live
+  12:30/13:00 pair before completing TASK-022.
 - LINE Secrets and GitHub remote require user-owned external setup.
 - TASK-020 Cloudflare Worker, `ALERT_HISTORY`, encrypted LINE secrets, and the
   12:30/13:00 weekday Cron Triggers are deployed. Observe the next production

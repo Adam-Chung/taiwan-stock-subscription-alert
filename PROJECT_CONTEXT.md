@@ -39,8 +39,9 @@ the configured safety-margin result.
 - TypeScript shared by the local Node.js runner and Cloudflare Worker.
 - Cloudflare Worker Free plan is the production scheduler; GitHub Actions is a
   manual diagnostic fallback only.
-- Weekday Cloudflare schedules run at 12:30 and 13:00 Asia/Taipei. Cloudflare KV
-  stores privacy-safe delivery markers, and 13:15 is the hard send deadline.
+- Weekday Cloudflare schedules run at 12:30 and 13:00 Asia/Taipei. One daily
+  Cloudflare KV state stores hashed successful recipients, LINE uses one
+  multicast request per batch, and 13:15 is the hard send deadline.
 - Complete new-share counts are required for dilution and safety-margin
   calculations. Public-underwriting shares are never used as a proxy. Counts
   come from authorized MOPS access or sourced entries in

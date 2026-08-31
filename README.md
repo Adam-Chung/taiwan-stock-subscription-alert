@@ -48,8 +48,9 @@ Repository、原始碼或免責聲明不代表取得第三方網站、即時行�
 - 計算市價折價率、完整股數稀釋率及安全邊際。
 - 不以公開申購股數替代整次新增股數。
 - 有標的、無標的及整體資料失敗使用不同 LINE 訊息。
-- 動態讀取所有 `LINE_TARGET_ID_<ALIAS>`，每位收件者獨立發送。
-- 單一收件者失敗不阻止其他人，備援排程只重試尚未成功者。
+- 動態讀取所有 `LINE_TARGET_ID_<ALIAS>`，以單次 LINE multicast 發送同一
+  訊息，避免收件者數量耗盡 Cloudflare subrequest 額度。
+- multicast 整批失敗時不寫成功紀錄，備援排程會完整重試待送批次。
 - 紀錄只保存 alias 與 SHA-256 userId 雜湊，不保存原始 userId。
 - 12:30 主排程與 13:00 備援排程（Asia/Taipei）；Cloudflare KV 的每日成功
   標記避免重複發送。
@@ -213,9 +214,10 @@ Dry run 不需要 LINE 憑證，也不會發送訊息。
 - `0 5 * * 1-5`：台灣時間週一至週五 13:00 備援。
 - `LATEST_SEND_TIME=13:15`：超過此時間直接失敗且不傳送申購資訊。
 
-12:30 成功後，Worker 會將每位成功收件者的 SHA-256 雜湊寫入 Cloudflare
-KV；13:00 只補送尚未成功的收件者。KV 不保存原始 LINE userId，紀錄在
-120 天後自動刪除。
+12:30 成功後，Worker 會用一次 KV put 將所有成功收件者的 SHA-256 雜湊
+寫入當日單一紀錄；13:00 用一次 KV get 判斷是否需要補送。KV 不保存原始
+LINE userId，紀錄在 120 天後自動刪除。multicast 整批成功才會寫成功紀錄；
+若評估或 multicast 失敗，該批不會記成成功，13:00 仍會完整重試。
 
 第一次部署需要先登入並建立 KV namespace：
 
@@ -315,6 +317,9 @@ GitHub 手動執行仍沿用 `data/run-history.json`；它與 Cloudflare KV 是�
   100～115 則，仍應在 LINE 後台確認當期方案與實際用量。
 - Cloudflare Cron 同樣不是金融等級 SLA；雙排程、期限防護與執行監控只能
   降低風險，不能保證任何外部平台 100% 不故障。
+- Cloudflare Free 每次 invocation 的 subrequest 額度有限。正式 Worker 將
+  LINE 發送合併為一次 multicast，並將 KV 操作壓縮為一次讀取及成功後一次
+  寫入；新增收件者不會線性增加 LINE 或 KV subrequests。
 - MIS 免費資訊用於個人、低頻提醒；本專案不提供公開行情轉傳服務。
 - 所有 HTTP 資料請求採每個 host 至少 1,500 ms 的啟動間隔；這只是負載
   保護，不取代目標網站的條款、robots.txt 或授權。
@@ -337,4 +342,4 @@ npm run check
 股數或普通股數時的價差回報、缺少前收時的降級行為、民國日期、台北時區、
 Worker 的 12:30／13:00 去重與 13:15 期限防護，以及通知格式。
 測試亦涵蓋暫時性來源重試、明確拒絕不重試、安全化錯誤日誌，以及新增
-股數缺失時仍保留原已發行普通股數。
+股數缺失時仍保留原已發行普通股數、單次 multicast 與合併式 KV 狀態。

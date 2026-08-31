@@ -6,26 +6,34 @@ export interface DeliveryOutcome {
   error?: string;
 }
 
-export async function pushLineMessage(
+/** 使用 LINE multicast API 以單一 subrequest 發送相同訊息給所有收件者。 */
+export async function pushLineMulticastMessage(
   message: string,
   token: string,
-  target: string,
+  targets: string[],
 ): Promise<void> {
-  const response = await fetch("https://api.line.me/v2/bot/message/push", {
+  if (targets.length === 0 || targets.length > 500) {
+    throw new Error("LINE multicast 收件者數量必須介於 1 與 500");
+  }
+  const response = await fetch("https://api.line.me/v2/bot/message/multicast", {
     method: "POST",
     headers: {
       authorization: `Bearer ${token}`,
       "content-type": "application/json",
     },
     body: JSON.stringify({
-      to: target,
+      to: targets,
       messages: [{ type: "text", text: message }],
     }),
     signal: AbortSignal.timeout(20_000),
   });
   if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`LINE Push 失敗：HTTP ${response.status} ${body.slice(0, 200)}`);
+    const requestId = response.headers.get("x-line-request-id");
+    throw new Error(
+      `LINE Multicast 失敗：HTTP ${response.status}${
+        requestId ? ` (requestId ${requestId})` : ""
+      }`,
+    );
   }
 }
 
@@ -40,22 +48,27 @@ export async function pushLineMessageToRecipients(
   );
 }
 
-/** 使用明確提供的 token 對多位收件者個別發送，讓不同執行環境共用。 */
+/** 使用明確 token 以單次 multicast 發送，並將整批結果映射回既有 outcome。 */
 export async function pushLineMessageToRecipientsWithToken(
   message: string,
   recipients: LineRecipient[],
   token: string,
 ): Promise<DeliveryOutcome[]> {
-  const results = await Promise.allSettled(
-    recipients.map((recipient) => pushLineMessage(message, token, recipient.targetId)),
-  );
-  return results.map((result, index) => ({
-    recipient: recipients[index]!,
-    status: result.status === "fulfilled" ? "sent" : "failed",
-    ...(result.status === "rejected"
-      ? { error: errorMessage(result.reason) }
-      : {}),
-  }));
+  try {
+    await pushLineMulticastMessage(
+      message,
+      token,
+      recipients.map((recipient) => recipient.targetId),
+    );
+    return recipients.map((recipient) => ({ recipient, status: "sent" }));
+  } catch (error) {
+    const reason = errorMessage(error);
+    return recipients.map((recipient) => ({
+      recipient,
+      status: "failed",
+      error: reason,
+    }));
+  }
 }
 
 function errorMessage(reason: unknown): string {

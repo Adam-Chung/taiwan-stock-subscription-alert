@@ -177,3 +177,21 @@
   delivery guard. Logs intentionally omit response bodies and query details,
   so deeper source-format diagnosis may still require a deliberate dry run.
 - Supersedes: none.
+
+## DEC-013: Batch LINE delivery and daily KV state within subrequest limits
+
+- Date: 2026-08-31
+- Status: accepted
+- Context: The first scheduled Cloudflare invocation reached the Free plan's
+  50-subrequest limit when starting recipient 003 after official-data requests.
+- Decision: Send all pending recipients through one LINE multicast request and
+  store their hashes in one daily KV state loaded once per invocation. Treat a
+  multicast HTTP success as success for the whole batch; otherwise record none
+  so the 13:00 schedule retries the complete pending batch.
+- Reason: Recipient count should not linearly consume external requests after
+  source evaluation has already used most of the invocation budget.
+- Consequences: A single invalid or failed multicast request retries the whole
+  pending batch instead of retaining per-recipient HTTP outcomes. The system
+  still avoids duplicates across successful batches and stores no raw userId.
+- Supersedes: DEC-011's physical per-recipient KV marker layout; its deadline,
+  scheduling, and privacy decisions remain active.

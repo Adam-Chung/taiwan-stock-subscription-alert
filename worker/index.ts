@@ -37,6 +37,14 @@ export interface WorkerRunResult {
   sentCount: number;
 }
 
+interface DailyDeliveryState {
+  recipients: Array<{
+    alias: string;
+    hash: string;
+    sentAt: string;
+  }>;
+}
+
 const DEFAULT_LATEST_SEND_TIME = "13:15";
 const HISTORY_TTL_SECONDS = 120 * 24 * 60 * 60;
 
@@ -79,10 +87,15 @@ export async function executeScheduledAlert(
   }
 
   const recipients = loadRecipients(recipientEnvironment(env));
-  const pendingRecipients = await pendingRecipientsForDate(
+  const deliveryState = await loadDeliveryState(
     taipei.date,
-    recipients,
     env.ALERT_HISTORY,
+  );
+  const deliveredHashes = new Set(
+    deliveryState.recipients.map((recipient) => recipient.hash),
+  );
+  const pendingRecipients = recipients.filter(
+    (recipient) => !deliveredHashes.has(recipient.hash),
   );
   if (pendingRecipients.length === 0) {
     return { status: "duplicate", date: taipei.date, sentCount: 0 };
@@ -113,7 +126,13 @@ export async function executeScheduledAlert(
   const successes = outcomes
     .filter((outcome) => outcome.status === "sent")
     .map((outcome) => outcome.recipient);
-  await recordSuccessfulDeliveries(taipei.date, successes, env.ALERT_HISTORY, now);
+  await recordSuccessfulDeliveries(
+    taipei.date,
+    deliveryState,
+    successes,
+    env.ALERT_HISTORY,
+    now,
+  );
 
   const failures = outcomes.filter((outcome) => outcome.status === "failed");
   if (failures.length > 0) {
@@ -164,39 +183,66 @@ function recipientEnvironment(
   };
 }
 
-/** 排除當日已成功送達的收件者，讓多個 Cron Trigger 不會重複通知。 */
-async function pendingRecipientsForDate(
+/** 以單次 KV get 載入當日所有收件者狀態，無紀錄時建立空狀態。 */
+async function loadDeliveryState(
   date: string,
-  recipients: LineRecipient[],
   history: KVNamespace,
-): Promise<LineRecipient[]> {
-  const states = await Promise.all(
-    recipients.map((recipient) => history.get(historyKey(date, recipient.hash))),
-  );
-  return recipients.filter((_recipient, index) => states[index] === null);
+): Promise<DailyDeliveryState> {
+  const raw = await history.get(historyKey(date));
+  if (raw === null) return { recipients: [] };
+  const parsed: unknown = JSON.parse(raw);
+  if (!isDailyDeliveryState(parsed)) {
+    throw new Error(`Cloudflare KV ${date} 傳送紀錄格式無效`);
+  }
+  return parsed;
 }
 
-/** 將成功送達結果保存到 Cloudflare KV，資料只含 alias、雜湊鍵與時間。 */
+/** 以單次 KV put 合併成功收件者，資料只含 alias、雜湊與時間。 */
 async function recordSuccessfulDeliveries(
   date: string,
+  state: DailyDeliveryState,
   recipients: LineRecipient[],
   history: KVNamespace,
   now: Date,
 ): Promise<void> {
-  await Promise.all(
-    recipients.map((recipient) =>
-      history.put(
-        historyKey(date, recipient.hash),
-        JSON.stringify({ alias: recipient.alias, sentAt: now.toISOString() }),
-        { expirationTtl: HISTORY_TTL_SECONDS },
-      ),
-    ),
+  if (recipients.length === 0) return;
+  const merged = new Map(
+    state.recipients.map((recipient) => [recipient.hash, recipient]),
+  );
+  for (const recipient of recipients) {
+    merged.set(recipient.hash, {
+      alias: recipient.alias,
+      hash: recipient.hash,
+      sentAt: now.toISOString(),
+    });
+  }
+  await history.put(
+    historyKey(date),
+    JSON.stringify({ recipients: [...merged.values()] } satisfies DailyDeliveryState),
+    { expirationTtl: HISTORY_TTL_SECONDS },
   );
 }
 
-/** 建立不含原始 LINE userId 的持久化鍵。 */
-function historyKey(date: string, recipientHash: string): string {
-  return `delivery:${date}:${recipientHash}`;
+/** 驗證 KV 內容只包含可接受的隱私安全傳送欄位。 */
+function isDailyDeliveryState(value: unknown): value is DailyDeliveryState {
+  if (!value || typeof value !== "object" || !("recipients" in value)) return false;
+  const recipients = (value as { recipients?: unknown }).recipients;
+  return (
+    Array.isArray(recipients) &&
+    recipients.every(
+      (recipient) =>
+        recipient !== null &&
+        typeof recipient === "object" &&
+        typeof (recipient as Record<string, unknown>).alias === "string" &&
+        typeof (recipient as Record<string, unknown>).hash === "string" &&
+        typeof (recipient as Record<string, unknown>).sentAt === "string",
+    )
+  );
+}
+
+/** 建立每日單一且不含原始 LINE userId 的持久化鍵。 */
+function historyKey(date: string): string {
+  return `delivery:${date}`;
 }
 
 /** 取得指定時間在 Asia/Taipei 的日期與分鐘數。 */

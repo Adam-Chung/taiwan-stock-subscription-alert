@@ -4,14 +4,18 @@ import { executeScheduledAlert } from "../worker/index.js";
 
 class FakeKv {
   readonly values = new Map<string, string>();
+  getCount = 0;
+  putCount = 0;
 
   /** 模擬 Cloudflare KV 讀取。 */
   async get(key: string): Promise<string | null> {
+    this.getCount += 1;
     return this.values.get(key) ?? null;
   }
 
   /** 模擬 Cloudflare KV 寫入。 */
   async put(key: string, value: string): Promise<void> {
+    this.putCount += 1;
     this.values.set(key, value);
   }
 }
@@ -71,6 +75,8 @@ describe("Cloudflare scheduled alert", () => {
     expect(workerDependencies.evaluate).toHaveBeenCalledTimes(1);
     expect(workerDependencies.deliver).toHaveBeenCalledTimes(1);
     expect(history.values.size).toBe(1);
+    expect(history.getCount).toBe(2);
+    expect(history.putCount).toBe(1);
   });
 
   it("13:16 已超過期限時拒絕取得資料及發送", async () => {
@@ -90,10 +96,11 @@ describe("Cloudflare scheduled alert", () => {
   it("部分收件者已送達時只補送尚未成功者", async () => {
     const history = new FakeKv();
     const firstHash = createHash("sha256").update("U-first").digest("hex");
-    history.values.set(
-      `delivery:2026-08-31:${firstHash}`,
-      JSON.stringify({ alias: "001", sentAt: "2026-08-31T04:30:00Z" }),
-    );
+    history.values.set("delivery:2026-08-31", JSON.stringify({
+      recipients: [
+        { alias: "001", hash: firstHash, sentAt: "2026-08-31T04:30:00Z" },
+      ],
+    }));
     const env = {
       ...environment(history),
       LINE_TARGET_ID_001: "U-first",
@@ -111,6 +118,32 @@ describe("Cloudflare scheduled alert", () => {
     const deliveredRecipients = workerDependencies.deliver.mock.calls[0]?.[1];
     expect(deliveredRecipients).toHaveLength(1);
     expect(deliveredRecipients?.[0]?.targetId).toBe("U-second");
+    expect(history.getCount).toBe(1);
+    expect(history.putCount).toBe(1);
+  });
+
+  it("multicast 整批失敗時不寫 KV，讓備援完整重試", async () => {
+    const history = new FakeKv();
+    const env = {
+      ...environment(history),
+      LINE_TARGET_ID_002: "U-second",
+      LINE_TARGET_ID_003: "U-third",
+    } as never;
+    const workerDependencies = dependencies();
+    workerDependencies.deliver.mockImplementation(async (_message, recipients) =>
+      recipients.map((recipient: unknown) => ({
+        recipient,
+        status: "failed" as const,
+        error: "HTTP 429",
+      })),
+    );
+
+    await expect(
+      executeScheduledAlert(new Date("2026-09-01T04:30:00Z"), env, workerDependencies),
+    ).rejects.toThrow("LINE 發送失敗");
+    expect(history.getCount).toBe(1);
+    expect(history.putCount).toBe(0);
+    expect(history.values.size).toBe(0);
   });
 
   it("評估失敗時傳送異常訊息但不寫成功紀錄", async () => {

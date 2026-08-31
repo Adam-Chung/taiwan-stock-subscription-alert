@@ -132,6 +132,10 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 - The 2026-08-31 live diagnostic resolved 6967 with 24,904,477 original shares
   and 5,500,000 new shares. The new regression test preserves original shares
   when the new-share lookup ultimately fails.
+- The first 2026-08-31 scheduled invocation exhausted the Cloudflare Free
+  50-subrequest limit while starting recipient 003. LINE delivery now uses one
+  multicast request for all pending recipients, and Worker delivery history now
+  uses one daily KV get plus at most one successful KV put.
 
 ## Evidence
 
@@ -151,6 +155,8 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 - `npm audit --omit=dev`: zero vulnerabilities.
 - `npm run check`: Worker bundle completed and 13 test files / 44 tests passed
   after adding bounded source retries and privacy-safe failure logging.
+- Worker typecheck and dry-run bundle passed; 13 test files / 46 tests passed
+  after consolidating LINE multicast and daily KV state.
 - The 2026-08-26 live dry run completed two cases with no missing data and the
   new compact summary.
 - The 2026-08-03 live dry run resolved 7855 with 192,527,928 original shares,
@@ -180,8 +186,8 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 
 ## Next Action
 
-Deploy the retry/logging update, then inspect the next production source failure
-through the structured Cloudflare log event without exposing secrets.
+Deploy the multicast/KV update and verify the next 12:30 invocation stays below
+the Cloudflare subrequest limit; confirm the 13:00 run deduplicates the batch.
 
 ## Loop Controls
 
