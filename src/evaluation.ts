@@ -42,6 +42,10 @@ export async function evaluateSubscriptionDate(
     const issuance =
       issuanceResult.status === "fulfilled" ? issuanceResult.value : undefined;
 
+    logRejectedSource(date, offering.code, "quote", quoteResult);
+    logRejectedSource(date, offering.code, "capital", capitalResult);
+    logRejectedSource(date, offering.code, "issuance", issuanceResult);
+
     if (!Number.isFinite(offering.actualUnderwritingPrice)) {
       failures.push({
         offering,
@@ -76,4 +80,32 @@ export async function evaluateSubscriptionDate(
   }
 
   return buildSuccessMessage(date, evaluated, failures);
+}
+
+/** 記錄不含憑證、收件者資料、URL 查詢參數與回應內容的來源失敗摘要。 */
+function logRejectedSource(
+  date: string,
+  code: string,
+  source: "quote" | "capital" | "issuance",
+  result: PromiseSettledResult<unknown>,
+): void {
+  if (result.status !== "rejected") return;
+  console.error(
+    JSON.stringify({
+      event: "official_source_failed",
+      date,
+      code,
+      source,
+      reason: safeSourceError(result.reason),
+    }),
+  );
+}
+
+/** 將外部來源錯誤安全化並限制長度，避免日誌意外帶入網址或敏感參數。 */
+function safeSourceError(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+  return message
+    .replace(/https?:\/\/\S+/gi, "[url]")
+    .replace(/(token|secret|authorization|userId)\s*[=:]\s*\S+/gi, "$1=[redacted]")
+    .slice(0, 300);
 }

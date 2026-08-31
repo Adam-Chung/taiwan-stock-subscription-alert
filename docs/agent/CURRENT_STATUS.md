@@ -1,6 +1,6 @@
 # Current Status
 
-Last updated: 2026-08-30 Asia/Taipei
+Last updated: 2026-08-31 Asia/Taipei
 
 ## Current Objective
 
@@ -122,6 +122,16 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
   Asia/Taipei.
 - Cloudflare confirms encrypted `secret_text` bindings for the LINE channel
   token and recipient slots 001 through 003; secret values were never read.
+- Official HTTP sources now retry once only for timeout, transport errors,
+  HTTP 408/425/429, and HTTP 500-504 while respecting bounded `Retry-After`.
+  Explicit access denial such as HTTP 403 is not retried.
+- Source retries and final failures emit structured privacy-safe logs with only
+  date, public stock code, source category, host, attempt, and sanitized reason.
+  LINE credentials, recipient IDs, query parameters, and response bodies are
+  excluded.
+- The 2026-08-31 live diagnostic resolved 6967 with 24,904,477 original shares
+  and 5,500,000 new shares. The new regression test preserves original shares
+  when the new-share lookup ultimately fails.
 
 ## Evidence
 
@@ -139,6 +149,8 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 - Worker health endpoint returned `{ service: "taiwan-stock-subscription-alert",
   ok: true }` after production deployment; Wrangler confirmed both Cron Triggers.
 - `npm audit --omit=dev`: zero vulnerabilities.
+- `npm run check`: Worker bundle completed and 13 test files / 44 tests passed
+  after adding bounded source retries and privacy-safe failure logging.
 - The 2026-08-26 live dry run completed two cases with no missing data and the
   new compact summary.
 - The 2026-08-03 live dry run resolved 7855 with 192,527,928 original shares,
@@ -168,8 +180,8 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 
 ## Next Action
 
-Observe the next 12:30 production Cron run and verify successful LINE delivery,
-KV recording, CPU usage, and the 13:00 duplicate-safe backup result.
+Deploy the retry/logging update, then inspect the next production source failure
+through the structured Cloudflare log event without exposing secrets.
 
 ## Loop Controls
 

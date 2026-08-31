@@ -158,3 +158,22 @@
   secrets. Cloudflare remains an external dependency and cannot provide a 100%
   delivery guarantee; live monitoring and a post-deployment run remain required.
 - Supersedes: GitHub Actions as the production scheduler in DEC-001.
+
+## DEC-012: Retry only transient source failures and log sanitized diagnostics
+
+- Date: 2026-08-31
+- Status: accepted
+- Context: The 12:30 result for 6967 was incomplete, while a later diagnostic
+  resolved both official capital and MOPS issuance data. Existing logs did not
+  preserve which independent source had failed at delivery time.
+- Decision: Retry transport errors, timeout, HTTP 408/425/429, and HTTP 500-504
+  once, respecting a maximum 60-second `Retry-After`. Do not retry HTTP 403 or
+  other explicit denials. Log only public evaluation identifiers and sanitized
+  source failure summaries.
+- Reason: A bounded retry can absorb a brief official-source outage, while safe
+  structured logs distinguish transient access failure from parser or data
+  absence without exposing LINE credentials or recipient identities.
+- Consequences: A failing run may take longer, but remains inside the 13:15
+  delivery guard. Logs intentionally omit response bodies and query details,
+  so deeper source-format diagnosis may still require a deliberate dry run.
+- Supersedes: none.
