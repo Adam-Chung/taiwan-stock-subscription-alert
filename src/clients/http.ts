@@ -15,6 +15,7 @@ class HttpStatusError extends Error {
 export async function fetchJson<T>(url: string, timeoutMs = 20_000): Promise<T> {
   return requestWithRetry(url, async () => {
     const response = await fetch(url, {
+      redirect: "manual",
       headers: {
         accept: "application/json",
         "user-agent": "taiwan-stock-subscription-alert/0.1 personal-use",
@@ -34,6 +35,7 @@ export async function postFormText(
   return requestWithRetry(url, async () => {
     const response = await fetch(url, {
       method: "POST",
+      redirect: "manual",
       headers: {
         accept: "text/html",
         "content-type": "application/x-www-form-urlencoded",
@@ -88,7 +90,12 @@ function assertSuccessful(response: Response): void {
 
 /** 僅重試可能自行恢復的傳輸或伺服器錯誤。 */
 function isRetryable(error: unknown): boolean {
-  if (!(error instanceof HttpStatusError)) return error instanceof Error;
+  if (!(error instanceof HttpStatusError)) {
+    return (
+      error instanceof Error &&
+      !error.message.includes("Too many subrequests")
+    );
+  }
   return (
     error.status === 408 ||
     error.status === 425 ||

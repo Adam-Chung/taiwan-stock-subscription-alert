@@ -59,6 +59,9 @@ Configure `LINE_CHANNEL_ACCESS_TOKEN` and one or more
 - LINE production delivery uses one multicast request and one daily hashed KV
   state to remain within Cloudflare Free subrequest limits. Verify the next live
   12:30/13:00 pair before completing TASK-022.
+- Official fetches use manual redirect handling because automatic redirect
+  chains exhausted the 50-subrequest budget before multicast. Treat a new 3xx
+  as a canonical-endpoint issue; do not re-enable unbounded redirect following.
 - LINE Secrets and GitHub remote require user-owned external setup.
 - TASK-020 Cloudflare Worker, `ALERT_HISTORY`, encrypted LINE secrets, and the
   12:30/13:00 weekday Cron Triggers are deployed. Observe the next production

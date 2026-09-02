@@ -325,6 +325,9 @@ GitHub 手動執行仍沿用 `data/run-history.json`；它與 Cloudflare KV 是�
   保護，不取代目標網站的條款、robots.txt 或授權。
 - timeout、HTTP 408／425／429 及 500～504 只會有限重試一次，並遵守最長
   60 秒的 `Retry-After`；403 等明確拒絕不重試，也不繞過封鎖。
+- 所有外部請求使用 `redirect: manual`，避免 Cloudflare 自動跟隨未知長度的
+  redirect chain 耗盡每次 invocation 的 subrequest 額度。3xx 會當成該來源
+  失敗並保留其他已取得資料；「Too many subrequests」不做無效重試。
 - 最終失敗會記錄日期、股票代號、來源類型與安全化錯誤摘要，不記錄 LINE
   token、收件者 ID、URL 查詢參數或外部回應內容。Cloudflare Logs 可用
   `official_source_retry` 與 `official_source_failed` 事件篩選問題來源。
@@ -342,4 +345,5 @@ npm run check
 股數或普通股數時的價差回報、缺少前收時的降級行為、民國日期、台北時區、
 Worker 的 12:30／13:00 去重與 13:15 期限防護，以及通知格式。
 測試亦涵蓋暫時性來源重試、明確拒絕不重試、安全化錯誤日誌，以及新增
-股數缺失時仍保留原已發行普通股數、單次 multicast 與合併式 KV 狀態。
+股數缺失時仍保留原已發行普通股數、單次 multicast、合併式 KV 狀態，及
+redirect/subrequest 上限防護。

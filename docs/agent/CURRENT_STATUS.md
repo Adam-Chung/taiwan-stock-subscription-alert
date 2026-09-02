@@ -136,6 +136,10 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
   50-subrequest limit while starting recipient 003. LINE delivery now uses one
   multicast request for all pending recipients, and Worker delivery history now
   uses one daily KV get plus at most one successful KV put.
+- The 2026-09-02 schedule still exhausted the subrequest budget before the
+  single multicast call, proving recipient batching was necessary but not
+  sufficient. All official fetches now disable automatic redirect following;
+  3xx fails that source immediately, and a subrequest-limit error is not retried.
 
 ## Evidence
 
@@ -157,6 +161,9 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
   after adding bounded source retries and privacy-safe failure logging.
 - Worker typecheck and dry-run bundle passed; 13 test files / 46 tests passed
   after consolidating LINE multicast and daily KV state.
+- Worker bundle and 13 test files / 49 tests passed after bounding redirects.
+  A live 2026-09-02 dry run still resolved 7825 with complete quote, capital,
+  issuance, dilution, and safety-margin data without sending LINE.
 - The 2026-08-26 live dry run completed two cases with no missing data and the
   new compact summary.
 - The 2026-08-03 live dry run resolved 7855 with 192,527,928 original shares,
@@ -186,8 +193,8 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 
 ## Next Action
 
-Deploy the multicast/KV update and verify the next 12:30 invocation stays below
-the Cloudflare subrequest limit; confirm the 13:00 run deduplicates the batch.
+Deploy the bounded-redirect update and verify the next 12:30 invocation reaches
+multicast within the Cloudflare subrequest limit; confirm 13:00 deduplicates.
 
 ## Loop Controls
 

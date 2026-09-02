@@ -195,3 +195,20 @@
   still avoids duplicates across successful batches and stores no raw userId.
 - Supersedes: DEC-011's physical per-recipient KV marker layout; its deadline,
   scheduling, and privacy decisions remain active.
+
+## DEC-014: Fail individual sources on redirects instead of exhausting delivery
+
+- Date: 2026-09-02
+- Status: accepted
+- Context: Even after LINE multicast and consolidated KV, evaluation consumed
+  all 50 Cloudflare Free subrequests before the first LINE request. Cloudflare
+  counts every automatically followed redirect in a chain as a subrequest.
+- Decision: Set `redirect: manual` for every official fetch. Treat HTTP 3xx as a
+  non-retryable source failure and preserve independently successful facts.
+  Never retry an explicit `Too many subrequests` runtime error.
+- Reason: A bounded partial-data alert before 13:15 is more valuable than a
+  complete evaluation that prevents every recipient from receiving a message.
+- Consequences: A source that begins requiring a legitimate redirect will be
+  shown as incomplete until its configured canonical endpoint is updated. The
+  application will not automatically follow or bypass unexpected redirects.
+- Supersedes: none.
