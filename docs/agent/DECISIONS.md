@@ -212,3 +212,20 @@
   shown as incomplete until its configured canonical endpoint is updated. The
   application will not automatically follow or bypass unexpected redirects.
 - Supersedes: none.
+
+## DEC-015: Use named weekdays in Cloudflare Cron expressions
+
+- Date: 2026-09-04
+- Status: accepted
+- Context: Cloudflare interprets numeric day-of-week `1-5` as Sunday through
+  Thursday. The intended Friday schedules therefore did not execute, and the
+  Dashboard showed Sunday as the next run.
+- Decision: Express weekday triggers as `MON-FRI` instead of numeric ranges.
+  Verify the deployed interpretation in the Dashboard and protect the exact
+  expressions with a configuration test.
+- Reason: Named weekdays communicate intent directly and avoid cron dialect
+  ambiguity across platforms.
+- Consequences: Production runs Monday through Friday at the same UTC times;
+  Sunday is no longer scheduled.
+- Supersedes: The numeric day-of-week expressions recorded by DEC-011; its
+  times, backup strategy, and deadline remain unchanged.

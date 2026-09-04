@@ -140,6 +140,12 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
   single multicast call, proving recipient batching was necessary but not
   sufficient. All official fetches now disable automatic redirect following;
   3xx fails that source immediately, and a subrequest-limit error is not retried.
+- The 2026-09-04 schedules did not execute because Cloudflare interprets numeric
+  day-of-week `1-5` as Sunday through Thursday. Cron configuration now uses
+  explicit `MON-FRI` names, with a configuration regression test.
+- Cloudflare deployment `2d856e56-e323-442d-861c-0c88cc112aa1` and the
+  Dashboard both confirm 04:30/05:00 UTC Monday-through-Friday triggers. The
+  next displayed runs are Monday, 2026-09-07.
 
 ## Evidence
 
@@ -164,6 +170,8 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 - Worker bundle and 13 test files / 49 tests passed after bounding redirects.
   A live 2026-09-02 dry run still resolved 7825 with complete quote, capital,
   issuance, dilution, and safety-margin data without sending LINE.
+- `npm run check`: Worker bundle and 14 test files / 50 tests passed for the
+  named-weekday Cron correction.
 - The 2026-08-26 live dry run completed two cases with no missing data and the
   new compact summary.
 - The 2026-08-03 live dry run resolved 7855 with 192,527,928 original shares,
@@ -193,8 +201,8 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 
 ## Next Action
 
-Deploy the bounded-redirect update and verify the next 12:30 invocation reaches
-multicast within the Cloudflare subrequest limit; confirm 13:00 deduplicates.
+Observe the 2026-09-07 12:30/13:00 production pair and verify successful LINE
+multicast, daily KV deduplication, and bounded subrequest use.
 
 ## Loop Controls
 

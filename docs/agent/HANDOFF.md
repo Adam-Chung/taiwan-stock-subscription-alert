@@ -62,6 +62,8 @@ Configure `LINE_CHANNEL_ACCESS_TOKEN` and one or more
 - Official fetches use manual redirect handling because automatic redirect
   chains exhausted the 50-subrequest budget before multicast. Treat a new 3xx
   as a canonical-endpoint issue; do not re-enable unbounded redirect following.
+- Cloudflare Cron weekday fields must use `MON-FRI`; numeric `1-5` means Sunday
+  through Thursday in this dialect. Keep the configuration regression test.
 - LINE Secrets and GitHub remote require user-owned external setup.
 - TASK-020 Cloudflare Worker, `ALERT_HISTORY`, encrypted LINE secrets, and the
   12:30/13:00 weekday Cron Triggers are deployed. Observe the next production
