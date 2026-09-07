@@ -146,6 +146,10 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 - Cloudflare deployment `2d856e56-e323-442d-861c-0c88cc112aa1` and the
   Dashboard both confirm 04:30/05:00 UTC Monday-through-Friday triggers. The
   next displayed runs are Monday, 2026-09-07.
+- Complete-match LINE entries now reuse the industry code already returned by
+  the company-data request, display its readable industry name, and mark the
+  result as `✅ 完整符合`. Price-only and incomplete entries remain unchanged,
+  and no additional external request is introduced.
 
 ## Evidence
 
@@ -172,6 +176,8 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
   issuance, dilution, and safety-margin data without sending LINE.
 - `npm run check`: Worker bundle and 14 test files / 50 tests passed for the
   named-weekday Cron correction.
+- `npm run check`: Worker bundle and 14 test files / 50 tests passed after the
+  complete-match industry label and icon were added.
 - The 2026-08-26 live dry run completed two cases with no missing data and the
   new compact summary.
 - The 2026-08-03 live dry run resolved 7855 with 192,527,928 original shares,
@@ -201,8 +207,8 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 
 ## Next Action
 
-Observe the 2026-09-07 12:30/13:00 production pair and verify successful LINE
-multicast, daily KV deduplication, and bounded subrequest use.
+Deploy TASK-025, then observe the next 12:30/13:00 production pair and verify
+successful LINE multicast, daily KV deduplication, and bounded subrequest use.
 
 ## Loop Controls
 

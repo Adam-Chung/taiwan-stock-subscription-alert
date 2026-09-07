@@ -76,6 +76,7 @@ export function evaluateOffering(
     ...(capital?.issuedCommonShares !== undefined
       ? { issuedCommonShares: capital.issuedCommonShares }
       : {}),
+    ...(capital?.industryType ? { industryType: capital.industryType } : {}),
     ...(totalNewShares !== undefined ? { totalNewShares } : {}),
     ...(postIssueTotalShares !== undefined ? { postIssueTotalShares } : {}),
     ...(scalePercent !== undefined ? { scalePercent } : {}),

@@ -20,6 +20,9 @@ the configured safety-margin result.
 - For listed and OTC stocks, include current price and change from the previous
   trading day's close. For emerging stocks, clearly label the latest available
   trade and its change from the previous trading day's average.
+- For complete matches, include the official company industry type and mark the
+  complete judgment with a prominent icon. Do not add this line to price-only
+  or incomplete cases.
 - Discount must be greater than 20%.
 - Discount minus issuance-scale percentage must be greater than 10 percentage
   points.

@@ -17,6 +17,7 @@ it("可從櫃買中心上櫃與興櫃公司基本資料取得已發行股數", a
                 {
                   SecuritiesCompanyCode: "8421",
                   IssueShares: "54817140",
+                  SecuritiesIndustryCode: "10",
                 },
               ]
             : url.includes("mopsfin_t187ap03_R")
@@ -24,6 +25,7 @@ it("可從櫃買中心上櫃與興櫃公司基本資料取得已發行股數", a
                 {
                   SecuritiesCompanyCode: "7855",
                   IssueShares: "192527928",
+                  SecuritiesIndustryCode: "31",
                 },
               ]
             : [],
@@ -35,9 +37,11 @@ it("可從櫃買中心上櫃與興櫃公司基本資料取得已發行股數", a
   await expect(fetchCapitalInfo("8421")).resolves.toEqual({
     code: "8421",
     issuedCommonShares: 54_817_140,
+    industryType: "鋼鐵工業（10）",
   });
   await expect(fetchCapitalInfo("7855")).resolves.toEqual({
     code: "7855",
     issuedCommonShares: 192_527_928,
+    industryType: "其他電子業（31）",
   });
 });

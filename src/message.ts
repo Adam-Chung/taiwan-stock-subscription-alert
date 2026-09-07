@@ -33,9 +33,12 @@ export function buildSuccessMessage(
       header.push(
         "",
         `${item.offering.code} ${item.offering.name}`,
+        ...(item.recommendationKind === "complete"
+          ? [`產業類型：${item.industryType ?? "資料不足"}`]
+          : []),
         `判定：${
           item.recommendationKind === "complete"
-            ? "完整符合"
+            ? "✅ 完整符合"
             : "價差符合，但發行資料不足"
         }`,
         "申購截止：今天",

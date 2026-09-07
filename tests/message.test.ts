@@ -28,6 +28,7 @@ it("通知包含目前股價、前收、今日漲跌幅與股票公告連結", (
     dailyChangeAmount: 5,
     dailyChangePercent: 5.263,
     issuedCommonShares: 90_000,
+    industryType: "電子零組件業（28）",
     totalNewShares: 10_000,
     postIssueTotalShares: 100_000,
     scalePercent: 10,
@@ -49,6 +50,8 @@ it("通知包含目前股價、前收、今日漲跌幅與股票公告連結", (
   expect(message).toContain("價格時間：2026/07/23 10:30:00");
   expect(message).toContain("前一交易日收盤價：95 元");
   expect(message).toContain("今日漲跌：+5.00 元（+5.26%）");
+  expect(message).toContain("產業類型：電子零組件業（28）");
+  expect(message).toContain("判定：✅ 完整符合");
   expect(message).not.toContain("承銷價帳面報酬率");
   expect(message).toContain("本次新增股數：10,000 股");
   expect(message).toContain("原已發行普通股數：90,000 股");
@@ -89,12 +92,14 @@ it("價差符合但發行資料不足時保留發行欄位空白", () => {
     },
     discountPercent: 40,
     issuedCommonShares: 90_000,
+    industryType: "電子零組件業（28）",
     recommendationKind: "price-only",
     recommended: true,
     warning: "缺少已發行普通股數，無法計算股數稀釋率與安全邊際",
   } satisfies Evaluation;
   const message = buildSuccessMessage("2026-07-23", [completeItem], []);
   expect(message).toContain("判定：價差符合，但發行資料不足");
+  expect(message).not.toContain("產業類型：");
   expect(message).toContain("前一交易日收盤價：資料不足");
   expect(message).toContain("今日漲跌：無法計算");
   expect(message).toContain("本次新增股數：\n");

@@ -26,6 +26,7 @@ export interface Quote {
 export interface CapitalInfo {
   code: string;
   issuedCommonShares: number;
+  industryType?: string;
 }
 
 export interface IssuanceOverride {
@@ -40,6 +41,7 @@ export interface Evaluation {
   dailyChangeAmount?: number;
   dailyChangePercent?: number;
   issuedCommonShares?: number;
+  industryType?: string;
   totalNewShares?: number;
   postIssueTotalShares?: number;
   scalePercent?: number;
