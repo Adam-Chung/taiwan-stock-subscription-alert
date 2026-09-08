@@ -100,7 +100,7 @@ function isRetryable(error: unknown): boolean {
     error.status === 408 ||
     error.status === 425 ||
     error.status === 429 ||
-    (error.status >= 500 && error.status <= 504)
+    (error.status >= 500 && error.status <= 599)
   );
 }
 

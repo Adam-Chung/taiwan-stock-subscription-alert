@@ -5,7 +5,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-it("可從櫃買中心上櫃與興櫃公司基本資料取得已發行股數", async () => {
+it("依案件市場取得上櫃與興櫃公司基本資料", async () => {
   vi.stubGlobal(
     "fetch",
     vi.fn<typeof fetch>().mockImplementation(async (input) => {
@@ -34,14 +34,50 @@ it("可從櫃買中心上櫃與興櫃公司基本資料取得已發行股數", a
     }),
   );
 
-  await expect(fetchCapitalInfo("8421")).resolves.toEqual({
+  await expect(fetchCapitalInfo("8421", "上櫃增資")).resolves.toEqual({
     code: "8421",
     issuedCommonShares: 54_817_140,
     industryType: "鋼鐵工業（10）",
   });
-  await expect(fetchCapitalInfo("7855")).resolves.toEqual({
+  await expect(fetchCapitalInfo("7855", "初上市")).resolves.toEqual({
     code: "7855",
     issuedCommonShares: 192_527_928,
     industryType: "其他電子業（31）",
   });
+});
+
+it("公司資料來源暫時失敗時不快取缺漏，下一檔可重新取得", async () => {
+  vi.resetModules();
+  const fetchMock = vi.fn<typeof fetch>().mockImplementation(async (input) => {
+    const url = String(input);
+    if (!url.includes("mopsfin_t187ap03_O")) return Response.json([]);
+    if (fetchMock.mock.calls.length <= 2) {
+      return new Response("", { status: 503 });
+    }
+    return Response.json([
+      {
+        SecuritiesCompanyCode: "7777",
+        IssueShares: "186606250",
+        SecuritiesIndustryCode: "20",
+      },
+    ]);
+  });
+  vi.stubGlobal("fetch", fetchMock);
+  const warning = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+  const { fetchCapitalInfo: fetchFreshCapitalInfo } = await import(
+    "../src/clients/capital.js"
+  );
+
+  await expect(
+    fetchFreshCapitalInfo("6186", "上櫃增資"),
+  ).rejects.toThrow("1 個必要來源暫時失敗");
+  await expect(
+    fetchFreshCapitalInfo("7777", "上櫃增資"),
+  ).resolves.toEqual({
+    code: "7777",
+    issuedCommonShares: 186_606_250,
+    industryType: "其他（20）",
+  });
+  expect(fetchMock).toHaveBeenCalledTimes(3);
+  warning.mockRestore();
 });

@@ -20,9 +20,9 @@ the configured safety-margin result.
 - For listed and OTC stocks, include current price and change from the previous
   trading day's close. For emerging stocks, clearly label the latest available
   trade and its change from the previous trading day's average.
-- For complete matches, include the official company industry type and mark the
-  complete judgment with a prominent icon. Do not add this line to price-only
-  or incomplete cases.
+- Include the official company industry type for complete, price-only, and
+  incomplete cases whenever available; explicitly show missing industry data
+  when it cannot be retrieved. Mark complete judgments with a prominent icon.
 - Discount must be greater than 20%.
 - Discount minus issuance-scale percentage must be greater than 10 percentage
   points.
@@ -58,6 +58,9 @@ the configured safety-margin result.
 - Emerging quotes and company capital use TPEx OpenAPI datasets listed by the
   government open-data platform under Open Government Data License 1.0; the
   application does not scrape TPEx market-page HTML.
+- Listed and OTC prices use TWSE MIS directly. Initial-listing cases try their
+  expected MIS market first, then use the official TPEx emerging dataset when
+  the pre-listing symbol has no MIS quote.
 - MOPS automated webpage access is disabled by default because its robots.txt
   disallows crawling; it may be enabled only after the operator confirms
   authorization. Sourced manual overrides remain available.

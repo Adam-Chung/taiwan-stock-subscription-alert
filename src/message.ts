@@ -33,9 +33,7 @@ export function buildSuccessMessage(
       header.push(
         "",
         `${item.offering.code} ${item.offering.name}`,
-        ...(item.recommendationKind === "complete"
-          ? [`產業類型：${item.industryType ?? "資料不足"}`]
-          : []),
+        `產業類型：${item.industryType ?? "資料不足"}`,
         `判定：${
           item.recommendationKind === "complete"
             ? "✅ 完整符合"
@@ -107,6 +105,7 @@ export function buildSuccessMessage(
       ...failures.flatMap((item) => [
         "",
         `${item.offering.code} ${item.offering.name}`,
+        `產業類型：${item.capital?.industryType ?? "資料不足"}`,
         `案件類型：${item.offering.issueMarketLabel}`,
         `申購截止：${item.offering.subscriptionEndDate}`,
         `撥券日期（上市／上櫃日期）：${item.offering.allotmentDate}`,

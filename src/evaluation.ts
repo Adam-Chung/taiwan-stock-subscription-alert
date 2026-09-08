@@ -30,7 +30,7 @@ export async function evaluateSubscriptionDate(
     const [quoteResult, capitalResult, issuanceResult] =
       await Promise.allSettled([
         fetchQuote(offering),
-        fetchCapitalInfo(offering.code),
+        fetchCapitalInfo(offering.code, offering.issueMarketLabel),
         override
           ? Promise.resolve(override)
           : options.mopsFetchEnabled

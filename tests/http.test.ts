@@ -28,6 +28,28 @@ it("官方來源暫時回傳 503 時重試一次後成功", async () => {
   );
 });
 
+it("官方來源暫時回傳 520 時重試一次後成功", async () => {
+  const fetchMock = vi
+    .fn<typeof fetch>()
+    .mockResolvedValueOnce(new Response("", { status: 520 }))
+    .mockResolvedValueOnce(Response.json({ ok: true }));
+  vi.stubGlobal("fetch", fetchMock);
+  const warning = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+
+  await expect(fetchJson<{ ok: boolean }>("https://retry.example/data")).resolves.toEqual({
+    ok: true,
+  });
+  expect(fetchMock).toHaveBeenCalledTimes(2);
+  expect(warning).toHaveBeenCalledWith(
+    JSON.stringify({
+      event: "official_source_retry",
+      host: "retry.example",
+      nextAttempt: 2,
+      reason: "HTTP 520",
+    }),
+  );
+});
+
 it("來源回傳不可恢復的 403 時不重試", async () => {
   const fetchMock = vi
     .fn<typeof fetch>()

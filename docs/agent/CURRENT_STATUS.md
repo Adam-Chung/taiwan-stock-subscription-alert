@@ -146,10 +146,18 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 - Cloudflare deployment `2d856e56-e323-442d-861c-0c88cc112aa1` and the
   Dashboard both confirm 04:30/05:00 UTC Monday-through-Friday triggers. The
   next displayed runs are Monday, 2026-09-07.
-- Complete-match LINE entries now reuse the industry code already returned by
-  the company-data request, display its readable industry name, and mark the
-  result as `✅ 完整符合`. Price-only and incomplete entries remain unchanged,
-  and no additional external request is introduced.
+- LINE entries now reuse the industry code already returned by the company-data
+  request and display its readable industry name for complete, price-only, and
+  incomplete cases. Complete results are marked as `✅ 完整符合`; a missing
+  industry is stated explicitly, and no additional external request is introduced.
+- The 2026-09-08 investigation reproduced two transient gaps: failed company
+  endpoints were cached as an incomplete combined dataset, and the emerging
+  quote endpoint returned HTTP 520 without a retry. Company data now queries
+  only endpoints relevant to the offering market and caches successful
+  responses only; all transient 5xx responses receive one bounded retry.
+- Listed and OTC prices continue to come directly from TWSE MIS. Initial
+  listings query the appropriate MIS market first and retain the licensed TPEx
+  emerging quote fallback because pre-listing symbols may not exist in MIS.
 
 ## Evidence
 
@@ -178,6 +186,10 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
   named-weekday Cron correction.
 - `npm run check`: Worker bundle and 14 test files / 50 tests passed after the
   complete-match industry label and icon were added.
+- `npm run check`: Worker bundle and 14 test files / 52 tests passed after the
+  company cache and HTTP 520 recovery fixes.
+- A post-fix 2026-09-08 live dry run evaluated all three ending offerings with
+  zero incomplete cases and one complete match (7777).
 - The 2026-08-26 live dry run completed two cases with no missing data and the
   new compact summary.
 - The 2026-08-03 live dry run resolved 7855 with 192,527,928 original shares,
@@ -207,7 +219,7 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 
 ## Next Action
 
-Deploy TASK-025, then observe the next 12:30/13:00 production pair and verify
+Deploy TASK-025 and TASK-026, then observe the next 12:30/13:00 production pair and verify
 successful LINE multicast, daily KV deduplication, and bounded subrequest use.
 
 ## Loop Controls

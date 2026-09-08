@@ -99,7 +99,7 @@ it("價差符合但發行資料不足時保留發行欄位空白", () => {
   } satisfies Evaluation;
   const message = buildSuccessMessage("2026-07-23", [completeItem], []);
   expect(message).toContain("判定：價差符合，但發行資料不足");
-  expect(message).not.toContain("產業類型：");
+  expect(message).toContain("產業類型：電子零組件業（28）");
   expect(message).toContain("前一交易日收盤價：資料不足");
   expect(message).toContain("今日漲跌：無法計算");
   expect(message).toContain("本次新增股數：\n");
@@ -125,10 +125,15 @@ it("資料不完整區塊包含股票代號、名稱與公告連結", () => {
     {
       offering: failedOffering,
       reason: "測試資料缺少",
-      capital: { code: "8112", issuedCommonShares: 500_000_000 },
+      capital: {
+        code: "8112",
+        issuedCommonShares: 500_000_000,
+        industryType: "電子通路業（29）",
+      },
     },
   ]);
   expect(message).toContain("8112 至上");
+  expect(message).toContain("產業類型：電子通路業（29）");
   expect(message).toContain("實際承銷價：66 元");
   expect(message).toContain("公開承銷股數：3,480,000 股");
   expect(message).toContain("撥券日期（上市／上櫃日期）：2026-07-30");
@@ -139,6 +144,26 @@ it("資料不完整區塊包含股票代號、名稱與公告連結", () => {
   expect(message).toContain(
     "公告資訊：https://goodinfo.tw/tw/StockAnnounceList.asp?STOCK_ID=8112",
   );
+});
+
+it("資料不完整且公司資料缺失時明示產業類型資料不足", () => {
+  const offering = {
+    code: "2938",
+    name: "床的世界",
+    issueMarketLabel: "初上櫃",
+    subscriptionEndDate: "2026-09-08",
+    actualUnderwritingPrice: 18,
+    actualUnderwritingShares: 759_000,
+    totalUnderwritingAmount: 13_662_000,
+    allotmentDate: "2026-09-16",
+    cancelled: false,
+  };
+
+  const message = buildSuccessMessage("2026-09-08", [], [
+    { offering, reason: "行情資料不足" },
+  ]);
+
+  expect(message).toContain("2938 床的世界\n產業類型：資料不足");
 });
 
 it("行情失敗但完整股數存在時仍顯示發行後股數與稀釋率", () => {
