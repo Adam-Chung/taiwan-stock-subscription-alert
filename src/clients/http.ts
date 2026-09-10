@@ -1,7 +1,8 @@
 const nextRequestAtByHost = new Map<string, number>();
 const DEFAULT_MIN_INTERVAL_MS = 1_500;
 const MIN_ALLOWED_INTERVAL_MS = 500;
-const MAX_ATTEMPTS = 2;
+const DEFAULT_MAX_ATTEMPTS = 2;
+const MOPS_MAX_ATTEMPTS = 3;
 
 class HttpStatusError extends Error {
   constructor(
@@ -13,7 +14,7 @@ class HttpStatusError extends Error {
 }
 
 export async function fetchJson<T>(url: string, timeoutMs = 20_000): Promise<T> {
-  return requestWithRetry(url, async () => {
+  return requestWithRetry(url, DEFAULT_MAX_ATTEMPTS, async () => {
     const response = await fetch(url, {
       redirect: "manual",
       headers: {
@@ -32,7 +33,7 @@ export async function postFormText(
   form: Record<string, string>,
   timeoutMs = 20_000,
 ): Promise<string> {
-  return requestWithRetry(url, async () => {
+  return requestWithRetry(url, MOPS_MAX_ATTEMPTS, async () => {
     const response = await fetch(url, {
       method: "POST",
       redirect: "manual",
@@ -50,19 +51,20 @@ export async function postFormText(
   });
 }
 
-/** 對 timeout、網路錯誤、429 與暫時性伺服器錯誤進行一次有限重試。 */
+/** 對可恢復錯誤執行指定次數的有限嘗試，並保留來源速率限制。 */
 async function requestWithRetry<T>(
   url: string,
+  maxAttempts: number,
   request: () => Promise<T>,
 ): Promise<T> {
   let lastError: unknown;
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     await waitForRateLimit(url);
     try {
       return await request();
     } catch (error) {
       lastError = error;
-      if (attempt === MAX_ATTEMPTS || !isRetryable(error)) throw error;
+      if (attempt === maxAttempts || !isRetryable(error)) throw error;
       const retryAfterMs =
         error instanceof HttpStatusError ? error.retryAfterMs : undefined;
       console.warn(

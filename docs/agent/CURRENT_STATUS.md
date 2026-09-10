@@ -158,6 +158,11 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 - Listed and OTC prices continue to come directly from TWSE MIS. Initial
   listings query the appropriate MIS market first and retain the licensed TPEx
   emerging quote fallback because pre-listing symbols may not exist in MIS.
+- MOPS summary and detail requests now make at most three total attempts for
+  recoverable timeout, transport, 408/425/429, and 5xx failures. A third failure
+  falls through the existing partial-data evaluation so LINE reports the known
+  fields and marks the missing issuance data; denial, redirects, and exhausted
+  Worker subrequests still stop immediately.
 
 ## Evidence
 

@@ -50,6 +50,35 @@ it("官方來源暫時回傳 520 時重試一次後成功", async () => {
   );
 });
 
+it("MOPS 暫時錯誤時最多嘗試三次並可在第三次成功", async () => {
+  const fetchMock = vi
+    .fn<typeof fetch>()
+    .mockRejectedValueOnce(new TypeError("temporary network error"))
+    .mockResolvedValueOnce(new Response("", { status: 520 }))
+    .mockResolvedValueOnce(new Response("ok"));
+  vi.stubGlobal("fetch", fetchMock);
+  const warning = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+
+  await expect(
+    postFormText("https://mops.example/form", { code: "6667" }),
+  ).resolves.toBe("ok");
+  expect(fetchMock).toHaveBeenCalledTimes(3);
+  expect(warning).toHaveBeenCalledTimes(2);
+});
+
+it("MOPS 三次暫時錯誤後才放棄", async () => {
+  const fetchMock = vi
+    .fn<typeof fetch>()
+    .mockResolvedValue(new Response("", { status: 503 }));
+  vi.stubGlobal("fetch", fetchMock);
+  vi.spyOn(console, "warn").mockImplementation(() => undefined);
+
+  await expect(
+    postFormText("https://mops.example/form", { code: "6667" }),
+  ).rejects.toThrow("HTTP 503");
+  expect(fetchMock).toHaveBeenCalledTimes(3);
+});
+
 it("來源回傳不可恢復的 403 時不重試", async () => {
   const fetchMock = vi
     .fn<typeof fetch>()
