@@ -104,8 +104,9 @@ async function fetchEmergingQuote(code: string): Promise<Quote | undefined> {
 
 /** 依申購案件類型決定可接受的行情市場順序。 */
 function marketCandidates(label: string): Market[] {
-  if (label.includes("上市") || label.includes("創新板")) return ["tse", "emerging"];
+  if (label === "創新板轉列上櫃") return ["tse", "otc", "emerging"];
   if (label.includes("上櫃")) return ["otc", "emerging"];
+  if (label.includes("上市") || label.includes("創新板")) return ["tse", "emerging"];
   return ["tse", "otc", "emerging"];
 }
 

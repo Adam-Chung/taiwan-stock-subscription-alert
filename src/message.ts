@@ -14,12 +14,15 @@ export function buildSuccessMessage(
   const priceOnly = recommended.filter(
     (item) => item.recommendationKind === "price-only",
   );
+  const consider = recommended.filter(
+    (item) => item.recommendationKind === "consider",
+  );
   const header = [
     `【台股申購提醒｜${date}】`,
     "",
-    "執行成功",
     `今日截止：${evaluated.length + failures.length} 檔`,
     `完整符合：${complete.length} 檔`,
+    `可考慮：${consider.length} 檔`,
     `僅價差符合：${priceOnly.length} 檔`,
     `資料不足：${failures.length} 檔`,
   ];
@@ -37,13 +40,11 @@ export function buildSuccessMessage(
         `判定：${
           item.recommendationKind === "complete"
             ? "✅ 完整符合"
-            : "價差符合，但發行資料不足"
+            : item.recommendationKind === "consider"
+              ? "🟠 可考慮"
+              : "價差符合，但發行資料不足"
         }`,
         "申購截止：今天",
-        `撥券日期（上市／上櫃日期）：${item.offering.allotmentDate}`,
-        `公開承銷股數：${formatInteger(item.offering.actualUnderwritingShares)} 股`,
-        "",
-        `價格時間：${formatQuoteTime(item.quote.quotedAt)}`,
         `${isEmerging ? "興櫃最近成交價" : "目前股價"}：${formatMoney(item.quote.currentPrice)} 元${
           item.quote.usedPreviousClose
             ? isEmerging
@@ -108,9 +109,7 @@ export function buildSuccessMessage(
         `產業類型：${item.capital?.industryType ?? "資料不足"}`,
         `案件類型：${item.offering.issueMarketLabel}`,
         `申購截止：${item.offering.subscriptionEndDate}`,
-        `撥券日期（上市／上櫃日期）：${item.offering.allotmentDate}`,
         `實際承銷價：${formatOptionalMoney(item.offering.actualUnderwritingPrice)}`,
-        `公開承銷股數：${formatOptionalShares(item.offering.actualUnderwritingShares)}`,
         `原已發行普通股數：${formatOptionalShares(item.capital?.issuedCommonShares)}`,
         `整次新增發行股數：${formatOptionalShares(item.issuance?.totalNewShares)}`,
         `發行後總股數：${formatPostIssueShares(item)}`,
@@ -124,15 +123,6 @@ export function buildSuccessMessage(
   }
   header.push("", "提醒：以上為規則篩選結果，不代表保證獲利。");
   return header.join("\n");
-}
-
-/** 將外部行情日期轉成適合 LINE 閱讀的斜線格式。 */
-function formatQuoteTime(value: string): string {
-  if (!value) return "未提供";
-  const match = value.match(/^(\d{4})(\d{2})(\d{2})(.*)$/);
-  return match
-    ? `${match[1]}/${match[2]}/${match[3]}${match[4]}`
-    : value;
 }
 
 /** 格式化可能尚未確定的承銷價。 */

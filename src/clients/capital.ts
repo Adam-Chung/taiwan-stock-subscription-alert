@@ -100,14 +100,30 @@ export async function fetchCapitalInfo(
 
 /** 依申購市場限制公司資料來源，降低無關請求與 Cloudflare subrequest 用量。 */
 function capitalEndpoints(issueMarketLabel: string | undefined): string[] {
-  if (issueMarketLabel === "上市增資") return [ENDPOINTS.listed];
-  if (issueMarketLabel === "上櫃增資") return [ENDPOINTS.otc];
+  if (
+    issueMarketLabel === "上市增資" ||
+    issueMarketLabel === "第一上市公司現金增資" ||
+    issueMarketLabel === "創新板上市現增"
+  ) {
+    return [ENDPOINTS.listed];
+  }
+  if (
+    issueMarketLabel === "上櫃增資" ||
+    issueMarketLabel === "第一上櫃公司現金增資"
+  ) {
+    return [ENDPOINTS.otc];
+  }
   if (
     issueMarketLabel === "初上市" ||
     issueMarketLabel === "初上櫃" ||
-    issueMarketLabel === "創新板初上市"
+    issueMarketLabel === "創新板初上市" ||
+    issueMarketLabel === "第一上市公司初上市" ||
+    issueMarketLabel === "第一上櫃公司初上櫃"
   ) {
     return [ENDPOINTS.emerging, ENDPOINTS.publicIssuer];
+  }
+  if (issueMarketLabel === "創新板轉列上櫃") {
+    return [ENDPOINTS.listed, ENDPOINTS.otc];
   }
   return Object.values(ENDPOINTS);
 }

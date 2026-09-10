@@ -103,4 +103,42 @@ describe("evaluateOffering", () => {
     expect(result.discountPercent).toBeCloseTo(20);
     expect(result.recommended).toBe(false);
   });
+
+  it("折價率介於 10% 與 20%、稀釋率低於 5% 且安全邊際大於 10% 時可考慮", () => {
+    const result = evaluateOffering(
+      { ...offering, actualUnderwritingPrice: 85 },
+      quote,
+      { code: "1234", issuedCommonShares: 98_000 },
+      { totalNewShares: 2_000, sourceUrl: "https://example.test" },
+      {
+        minDiscountPercent: 20,
+        minSafetyMarginPercent: 10,
+      },
+    );
+
+    expect(result.discountPercent).toBeCloseTo(15);
+    expect(result.scalePercent).toBeCloseTo(2);
+    expect(result.safetyMarginPercent).toBeCloseTo(13);
+    expect(result.recommendationKind).toBe("consider");
+    expect(result.recommended).toBe(true);
+  });
+
+  it.each([
+    ["折價率等於 10%", 90, 98_000, 2_000],
+    ["稀釋率等於 5%", 84, 95_000, 5_000],
+    ["安全邊際等於 10%", 86, 96_000, 4_000],
+  ])("%s 不列為可考慮", (_label, underwritingPrice, issued, added) => {
+    const result = evaluateOffering(
+      { ...offering, actualUnderwritingPrice: underwritingPrice },
+      quote,
+      { code: "1234", issuedCommonShares: issued },
+      { totalNewShares: added, sourceUrl: "https://example.test" },
+      {
+        minDiscountPercent: 20,
+        minSafetyMarginPercent: 10,
+      },
+    );
+
+    expect(result.recommendationKind).toBe("none");
+  });
 });

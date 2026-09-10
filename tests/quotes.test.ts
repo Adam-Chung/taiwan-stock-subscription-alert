@@ -73,4 +73,32 @@ describe("fetchQuote", () => {
       "上市即時行情與官方興櫃行情皆未取得",
     );
   });
+
+  it("創新板轉列上櫃先查轉列前仍可能存在的上市行情", async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      Response.json({
+        msgArray: [
+          {
+            c: "6423",
+            n: "億而得",
+            z: "80",
+            y: "78",
+            d: "20260114",
+            t: "123000",
+          },
+        ],
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const quote = await fetchQuote({
+      ...offering,
+      code: "6423",
+      name: "億而得",
+      issueMarketLabel: "創新板轉列上櫃",
+    });
+
+    expect(String(fetchMock.mock.calls[0]?.[0])).toContain("ex_ch=tse_6423.tw");
+    expect(quote.market).toBe("tse");
+  });
 });

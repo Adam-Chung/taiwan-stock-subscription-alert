@@ -47,7 +47,7 @@ export interface Evaluation {
   scalePercent?: number;
   scaleKind?: "dilution";
   safetyMarginPercent?: number;
-  recommendationKind: "complete" | "price-only" | "none";
+  recommendationKind: "complete" | "consider" | "price-only" | "none";
   recommended: boolean;
   warning?: string;
 }

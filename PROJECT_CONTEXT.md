@@ -23,9 +23,19 @@ the configured safety-margin result.
 - Include the official company industry type for complete, price-only, and
   incomplete cases whenever available; explicitly show missing industry data
   when it cannot be retrieved. Mark complete judgments with a prominent icon.
+- Support first-listed-company cash capital increases such as the official
+  `第一上市公司現金增資` market label.
+- Cover every equity subscription market label observed in the official list
+  from 2025-09-10 through 2026-09-10, including first-listed/first-OTC and
+  innovation-board variants; continue excluding central government bonds.
 - Discount must be greater than 20%.
 - Discount minus issuance-scale percentage must be greater than 10 percentage
   points.
+- Mark a fully evaluated case as `🟠 可考慮` when discount is strictly between
+  10% and 20%, dilution is below 5%, and safety margin is above 10 percentage
+  points.
+- Omit the generic success label, allotment date, public-underwriting shares,
+  and quote timestamp from LINE details.
 - Do not represent public-subscription shares as the complete issuance dilution.
 - If underwriting price and a usable market price produce discount above 20%,
   report the stock even when total new shares or issued common shares are

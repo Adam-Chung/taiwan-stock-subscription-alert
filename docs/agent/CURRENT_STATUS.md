@@ -163,6 +163,13 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
   falls through the existing partial-data evaluation so LINE reports the known
   fields and marks the missing issuance data; denial, redirects, and exhausted
   Worker subrequests still stop immediately.
+- Official subscription rows labeled `第一上市公司現金增資` are now included
+  and use the listed-company quote and capital paths, closing the gap that
+  excluded 5284 on 2026-09-10.
+- Fully evaluated cases with discount strictly between 10% and 20%, dilution
+  below 5%, and safety margin above 10 percentage points are reported as
+  `🟠 可考慮`. LINE details no longer include the generic success label,
+  allotment date, public-underwriting shares, or quote timestamp.
 
 ## Evidence
 
@@ -195,6 +202,17 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
   company cache and HTTP 520 recovery fixes.
 - A post-fix 2026-09-08 live dry run evaluated all three ending offerings with
   zero incomplete cases and one complete match (7777).
+- `npm run check`: Worker bundle and 15 test files / 61 tests passed for the
+  first-listed market type, orange consideration rule, strict floating-point
+  boundaries, and compact LINE format.
+- The 2026-09-10 live dry run included all four ending offerings. It reported
+  5284 as `🟠 可考慮` at 18.83% discount, 4.08% dilution, and 14.75 percentage
+  points of safety margin, while omitting the four requested LINE fields.
+- The official public-subscription inventory from 2025-09-10 through
+  2026-09-10 was compared with `SUPPORTED_MARKETS`. Five additional equity
+  labels were added: first-listed initial listing, first-OTC initial listing,
+  first-OTC cash increase, innovation-board cash increase, and
+  innovation-board transfer to OTC. Central government bonds remain excluded.
 - The 2026-08-26 live dry run completed two cases with no missing data and the
   new compact summary.
 - The 2026-08-03 live dry run resolved 7855 with 192,527,928 original shares,
@@ -224,7 +242,7 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 
 ## Next Action
 
-Deploy TASK-025 and TASK-026, then observe the next 12:30/13:00 production pair and verify
+Deploy TASK-028, then observe the next 12:30/13:00 production pair and verify
 successful LINE multicast, daily KV deduplication, and bounded subrequest use.
 
 ## Loop Controls

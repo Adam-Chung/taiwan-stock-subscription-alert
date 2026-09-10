@@ -38,16 +38,19 @@ it("通知包含目前股價、前收、今日漲跌幅與股票公告連結", (
     recommended: true,
   } satisfies Evaluation;
   const message = buildSuccessMessage("2026-07-23", [item], []);
-  expect(message).toContain("執行成功");
+  expect(message).not.toContain("執行成功");
   expect(message).toContain("今日截止：1 檔");
   expect(message).toContain("完整符合：1 檔");
+  expect(message).toContain("可考慮：0 檔");
   expect(message).toContain("僅價差符合：0 檔");
   expect(message).toContain("資料不足：0 檔");
   expect(message).not.toContain("已處理案件");
   expect(message).not.toContain("可完成價格評估");
   expect(message).not.toContain("缺少必要資料");
   expect(message).toContain("目前股價：100 元");
-  expect(message).toContain("價格時間：2026/07/23 10:30:00");
+  expect(message).not.toContain("價格時間：");
+  expect(message).not.toContain("撥券日期");
+  expect(message).not.toContain("公開承銷股數");
   expect(message).toContain("前一交易日收盤價：95 元");
   expect(message).toContain("今日漲跌：+5.00 元（+5.26%）");
   expect(message).toContain("產業類型：電子零組件業（28）");
@@ -135,8 +138,8 @@ it("資料不完整區塊包含股票代號、名稱與公告連結", () => {
   expect(message).toContain("8112 至上");
   expect(message).toContain("產業類型：電子通路業（29）");
   expect(message).toContain("實際承銷價：66 元");
-  expect(message).toContain("公開承銷股數：3,480,000 股");
-  expect(message).toContain("撥券日期（上市／上櫃日期）：2026-07-30");
+  expect(message).not.toContain("公開承銷股數");
+  expect(message).not.toContain("撥券日期");
   expect(message).toContain("原已發行普通股數：500,000,000 股");
   expect(message).toContain("整次新增發行股數：資料不足");
   expect(message).toContain("發行後總股數：資料不足");
@@ -144,6 +147,46 @@ it("資料不完整區塊包含股票代號、名稱與公告連結", () => {
   expect(message).toContain(
     "公告資訊：https://goodinfo.tw/tw/StockAnnounceList.asp?STOCK_ID=8112",
   );
+});
+
+it("可考慮股票使用橘色判定並納入摘要", () => {
+  const item = {
+    offering: {
+      code: "5284",
+      name: "jpp-KY",
+      issueMarketLabel: "第一上市公司現金增資",
+      subscriptionEndDate: "2026-09-10",
+      actualUnderwritingPrice: 250,
+      actualUnderwritingShares: 192_000,
+      totalUnderwritingAmount: 48_000_000,
+      allotmentDate: "2026-09-22",
+      cancelled: false,
+    },
+    quote: {
+      code: "5284",
+      name: "jpp-KY",
+      market: "tse",
+      currentPrice: 294.12,
+      previousClose: 294.12,
+      quotedAt: "20260910 12:30:00",
+      usedPreviousClose: true,
+    },
+    discountPercent: 15,
+    issuedCommonShares: 98_000_000,
+    industryType: "其他（20）",
+    totalNewShares: 2_000_000,
+    postIssueTotalShares: 100_000_000,
+    scalePercent: 2,
+    scaleKind: "dilution",
+    safetyMarginPercent: 13,
+    recommendationKind: "consider",
+    recommended: true,
+  } satisfies Evaluation;
+
+  const message = buildSuccessMessage("2026-09-10", [item], []);
+
+  expect(message).toContain("可考慮：1 檔");
+  expect(message).toContain("判定：🟠 可考慮");
 });
 
 it("資料不完整且公司資料缺失時明示產業類型資料不足", () => {
