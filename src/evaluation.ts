@@ -16,11 +16,25 @@ export interface EvaluationOptions {
   mopsFetchEnabled: boolean;
 }
 
+export interface EvaluationResult {
+  message: string;
+  complete: boolean;
+  incompleteCount: number;
+}
+
 /** 使用共用官方資料來源評估指定日期的所有申購案件。 */
 export async function evaluateSubscriptionDate(
   date: string,
   options: EvaluationOptions,
 ): Promise<string> {
+  return (await evaluateSubscriptionDateResult(date, options)).message;
+}
+
+/** 評估指定日期並回傳訊息與資料完整度，供備援排程判斷是否需要更新。 */
+export async function evaluateSubscriptionDateResult(
+  date: string,
+  options: EvaluationOptions,
+): Promise<EvaluationResult> {
   const offerings = await fetchEndingOfferings(date);
   const evaluated: Evaluation[] = [];
   const failures: EvaluationFailure[] = [];
@@ -79,7 +93,13 @@ export async function evaluateSubscriptionDate(
     );
   }
 
-  return buildSuccessMessage(date, evaluated, failures);
+  const incompleteCount =
+    failures.length + evaluated.filter((item) => Boolean(item.warning)).length;
+  return {
+    message: buildSuccessMessage(date, evaluated, failures),
+    complete: incompleteCount === 0,
+    incompleteCount,
+  };
 }
 
 /** 記錄不含憑證、收件者資料、URL 查詢參數與回應內容的來源失敗摘要。 */

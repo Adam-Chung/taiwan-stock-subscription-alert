@@ -55,6 +55,9 @@ the configured safety-margin result.
 - Weekday Cloudflare schedules run at 12:30 and 13:00 Asia/Taipei. One daily
   Cloudflare KV state stores hashed successful recipients, LINE uses one
   multicast request per batch, and 13:15 is the hard send deadline.
+- The daily KV state also records evaluation completeness. A partial 12:30
+  result is reevaluated at 13:00 and is resent to all recipients only when the
+  missing-case count decreases or the result becomes complete.
 - Complete new-share counts are required for dilution and safety-margin
   calculations. Public-underwriting shares are never used as a proxy. Counts
   come from authorized MOPS access or sourced entries in

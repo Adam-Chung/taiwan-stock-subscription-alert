@@ -109,16 +109,25 @@ it("JSON 與 MOPS 請求都禁止自動跟隨 redirect", async () => {
   );
 });
 
-it("來源 redirect 立即失敗且不繼續消耗 subrequest", async () => {
+it("來源 302 時重試相同網址但不跟隨 redirect", async () => {
   const fetchMock = vi
     .fn<typeof fetch>()
-    .mockResolvedValue(new Response("", { status: 302 }));
+    .mockResolvedValueOnce(new Response("", {
+      status: 302,
+      headers: { location: "https://unexpected.example/target" },
+    }))
+    .mockResolvedValueOnce(Response.json({ ok: true }));
   vi.stubGlobal("fetch", fetchMock);
+  vi.spyOn(console, "warn").mockImplementation(() => undefined);
 
-  await expect(fetchJson("https://redirect.example/data")).rejects.toThrow(
-    "HTTP 302",
-  );
-  expect(fetchMock).toHaveBeenCalledTimes(1);
+  await expect(fetchJson("https://redirect.example/data")).resolves.toEqual({
+    ok: true,
+  });
+  expect(fetchMock).toHaveBeenCalledTimes(2);
+  expect(fetchMock.mock.calls.map(([input]) => String(input))).toEqual([
+    "https://redirect.example/data",
+    "https://redirect.example/data",
+  ]);
 });
 
 it("已耗盡 subrequest 時不做無效重試", async () => {

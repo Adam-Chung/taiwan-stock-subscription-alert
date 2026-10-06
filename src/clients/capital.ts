@@ -3,6 +3,11 @@ import { fetchJson } from "./http.js";
 
 type CompanyRow = Record<string, string>;
 
+interface CapitalEndpoint {
+  label: string;
+  url: string;
+}
+
 const ENDPOINTS = {
   listed: "https://openapi.twse.com.tw/v1/opendata/t187ap03_L",
   otc: "https://www.tpex.org.tw/openapi/v1/mopsfin_t187ap03_O",
@@ -57,7 +62,9 @@ export async function fetchCapitalInfo(
   issueMarketLabel?: string,
 ): Promise<CapitalInfo> {
   const endpoints = capitalEndpoints(issueMarketLabel);
-  const settled = await Promise.allSettled(endpoints.map(fetchCompanyRows));
+  const settled = await Promise.allSettled(
+    endpoints.map((endpoint) => fetchCompanyRows(endpoint.url)),
+  );
   const companyRows = settled.flatMap((result) =>
     result.status === "fulfilled" ? result.value : [],
   );
@@ -67,13 +74,15 @@ export async function fetchCapitalInfo(
       (item["公司代號"] ?? item.SecuritiesCompanyCode)?.trim() === code,
   );
   if (!row) {
-    const failedSourceCount = settled.filter(
-      (result) => result.status === "rejected",
-    ).length;
+    const failedSources = settled.flatMap((result, index) =>
+      result.status === "rejected"
+        ? [`${endpoints[index]?.label ?? "公司資料"}：${safeFailureReason(result.reason)}`]
+        : [],
+    );
     throw new Error(
       `找不到 ${code} 的公司基本資料${
-        failedSourceCount > 0
-          ? `（${failedSourceCount} 個必要來源暫時失敗）`
+        failedSources.length > 0
+          ? `（${failedSources.join("；")}）`
           : ""
       }`,
     );
@@ -99,19 +108,23 @@ export async function fetchCapitalInfo(
 }
 
 /** 依申購市場限制公司資料來源，降低無關請求與 Cloudflare subrequest 用量。 */
-function capitalEndpoints(issueMarketLabel: string | undefined): string[] {
+function capitalEndpoints(issueMarketLabel: string | undefined): CapitalEndpoint[] {
+  const listed = { label: "上市公司資料", url: ENDPOINTS.listed };
+  const otc = { label: "上櫃公司資料", url: ENDPOINTS.otc };
+  const publicIssuer = { label: "公開發行公司資料", url: ENDPOINTS.publicIssuer };
+  const emerging = { label: "興櫃公司資料", url: ENDPOINTS.emerging };
   if (
     issueMarketLabel === "上市增資" ||
     issueMarketLabel === "第一上市公司現金增資" ||
     issueMarketLabel === "創新板上市現增"
   ) {
-    return [ENDPOINTS.listed];
+    return [listed];
   }
   if (
     issueMarketLabel === "上櫃增資" ||
     issueMarketLabel === "第一上櫃公司現金增資"
   ) {
-    return [ENDPOINTS.otc];
+    return [otc];
   }
   if (
     issueMarketLabel === "初上市" ||
@@ -120,12 +133,19 @@ function capitalEndpoints(issueMarketLabel: string | undefined): string[] {
     issueMarketLabel === "第一上市公司初上市" ||
     issueMarketLabel === "第一上櫃公司初上櫃"
   ) {
-    return [ENDPOINTS.emerging, ENDPOINTS.publicIssuer];
+    return [emerging, publicIssuer];
   }
   if (issueMarketLabel === "創新板轉列上櫃") {
-    return [ENDPOINTS.listed, ENDPOINTS.otc];
+    return [listed, otc];
   }
-  return Object.values(ENDPOINTS);
+  return [listed, otc, publicIssuer, emerging];
+}
+
+/** 保留來源回應狀態但移除網址與回應內容。 */
+function safeFailureReason(reason: unknown): string {
+  const message = reason instanceof Error ? reason.message : String(reason);
+  const httpStatus = message.match(/HTTP\s+\d{3}/)?.[0];
+  return httpStatus ?? (reason instanceof Error ? reason.name : "UnknownError");
 }
 
 /** 只快取成功取得的公司資料；暫時失敗不留存，讓後續股票可重新嘗試。 */

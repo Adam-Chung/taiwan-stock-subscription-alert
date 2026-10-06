@@ -39,7 +39,7 @@ describe("pushLineMessageToRecipients", () => {
       "fetch",
       vi.fn().mockResolvedValue(
         new Response("U-sensitive", {
-          status: 429,
+          status: 403,
           headers: { "x-line-request-id": "request-123" },
         }),
       ),
@@ -52,8 +52,26 @@ describe("pushLineMessageToRecipients", () => {
     const outcomes = await pushLineMessageToRecipients("hello", recipients);
 
     expect(outcomes.map(({ status }) => status)).toEqual(["failed", "failed"]);
-    expect(outcomes[0]?.error).toContain("HTTP 429");
+    expect(outcomes[0]?.error).toContain("HTTP 403");
     expect(outcomes[0]?.error).toContain("request-123");
     expect(outcomes[0]?.error).not.toContain("U-sensitive");
+  });
+
+  it("LINE 429 時在同次執行有限重試後成功", async () => {
+    process.env.LINE_CHANNEL_ACCESS_TOKEN = "test-token";
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response(null, { status: 429 }))
+      .mockResolvedValueOnce(new Response(null, { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const recipients = [
+      { alias: "One", targetId: "U-1", hash: hashRecipientId("U-1") },
+    ];
+
+    const outcomes = await pushLineMessageToRecipients("hello", recipients);
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(outcomes[0]?.status).toBe("sent");
   });
 });

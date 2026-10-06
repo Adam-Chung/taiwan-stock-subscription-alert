@@ -88,6 +88,14 @@ describe("MOPS issuance parsing", () => {
     ).toBe(35_000_000);
   });
 
+  it("支援發行股數與數值間含括號說明的公告", () => {
+    expect(
+      parseTotalNewShares(
+        "發行股數(如屬盈餘或公積轉增資，則不含配發給員工部分):3,000,000股",
+      ),
+    ).toBe(3_000_000);
+  });
+
   it("從初次上市承銷價格公告的現金增資敘述解析普通股總數", () => {
     expect(
       parseTotalNewShares(`

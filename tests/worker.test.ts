@@ -36,7 +36,11 @@ function environment(history: FakeKv) {
 /** 建立不呼叫外部網路的 Worker 相依項目。 */
 function dependencies() {
   return {
-    evaluate: vi.fn().mockResolvedValue("測試申購提醒"),
+    evaluate: vi.fn().mockResolvedValue({
+      message: "【台股申購提醒｜2026-08-31】\n測試申購提醒",
+      complete: true,
+      incompleteCount: 0,
+    }),
     deliver: vi.fn().mockImplementation(async (_message, recipients) =>
       recipients.map((recipient: unknown) => ({
         recipient,
@@ -144,6 +148,68 @@ describe("Cloudflare scheduled alert", () => {
     expect(history.getCount).toBe(1);
     expect(history.putCount).toBe(0);
     expect(history.values.size).toBe(0);
+  });
+
+  it("12:30 資料不足時，13:00 資料改善會向全部收件者發送更新", async () => {
+    const history = new FakeKv();
+    const workerDependencies = dependencies();
+    workerDependencies.evaluate
+      .mockResolvedValueOnce({
+        message: "【台股申購提醒｜2026-08-31】\n資料不足：2 檔",
+        complete: false,
+        incompleteCount: 2,
+      })
+      .mockResolvedValueOnce({
+        message: "【台股申購提醒｜2026-08-31】\n資料不足：0 檔",
+        complete: true,
+        incompleteCount: 0,
+      });
+
+    const primary = await executeScheduledAlert(
+      new Date("2026-08-31T04:30:00Z"),
+      environment(history),
+      workerDependencies,
+    );
+    const backup = await executeScheduledAlert(
+      new Date("2026-08-31T05:00:00Z"),
+      environment(history),
+      workerDependencies,
+    );
+
+    expect(primary.status).toBe("sent");
+    expect(backup.status).toBe("updated");
+    expect(workerDependencies.deliver).toHaveBeenCalledTimes(2);
+    expect(workerDependencies.deliver.mock.calls[1]?.[0]).toContain(
+      "【台股申購提醒更新｜",
+    );
+    expect(JSON.parse(history.values.get("delivery:2026-08-31") ?? "{}")).toEqual(
+      expect.objectContaining({ evaluationComplete: true, incompleteCount: 0 }),
+    );
+  });
+
+  it("13:00 重查後資料未改善時不重複發送", async () => {
+    const history = new FakeKv();
+    const workerDependencies = dependencies();
+    workerDependencies.evaluate.mockResolvedValue({
+      message: "【台股申購提醒｜2026-08-31】\n資料不足：1 檔",
+      complete: false,
+      incompleteCount: 1,
+    });
+
+    await executeScheduledAlert(
+      new Date("2026-08-31T04:30:00Z"),
+      environment(history),
+      workerDependencies,
+    );
+    const backup = await executeScheduledAlert(
+      new Date("2026-08-31T05:00:00Z"),
+      environment(history),
+      workerDependencies,
+    );
+
+    expect(backup.status).toBe("unchanged");
+    expect(workerDependencies.evaluate).toHaveBeenCalledTimes(2);
+    expect(workerDependencies.deliver).toHaveBeenCalledTimes(1);
   });
 
   it("評估失敗時傳送異常訊息但不寫成功紀錄", async () => {

@@ -70,7 +70,7 @@ it("公司資料來源暫時失敗時不快取缺漏，下一檔可重新取得"
 
   await expect(
     fetchFreshCapitalInfo("6186", "上櫃增資"),
-  ).rejects.toThrow("1 個必要來源暫時失敗");
+  ).rejects.toThrow("上櫃公司資料：HTTP 503");
   await expect(
     fetchFreshCapitalInfo("7777", "上櫃增資"),
   ).resolves.toEqual({

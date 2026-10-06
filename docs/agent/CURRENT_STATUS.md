@@ -159,9 +159,10 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
   listings query the appropriate MIS market first and retain the licensed TPEx
   emerging quote fallback because pre-listing symbols may not exist in MIS.
 - MOPS summary and detail requests now make at most three total attempts for
-  recoverable timeout, transport, 408/425/429, and 5xx failures. A third failure
+  recoverable timeout, transport, 302, 408/425/429, and 5xx failures. HTTP 302
+  retries only the original URL and never follows Location. A third failure
   falls through the existing partial-data evaluation so LINE reports the known
-  fields and marks the missing issuance data; denial, redirects, and exhausted
+  fields and marks the missing issuance data; denial, other redirects, and exhausted
   Worker subrequests still stop immediately.
 - Official subscription rows labeled `第一上市公司現金增資` are now included
   and use the listed-company quote and capital paths, closing the gap that
@@ -205,6 +206,12 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 - `npm run check`: Worker bundle and 15 test files / 61 tests passed for the
   first-listed market type, orange consideration rule, strict floating-point
   boundaries, and compact LINE format.
+- `npm run check`: Worker bundle and 15 test files / 66 tests passed for
+  same-URL 302 retries, parenthetical MOPS share wording, transient LINE
+  retries, source-exhaustion diagnostics, and improvement-only backup updates.
+- A 2026-10-06 live dry run reported zero incomplete cases. It resolved 3260
+  with industry 24, 336,463,418 original shares, and 20,000,000 new shares;
+  7806 completed evaluation and was omitted only because it did not qualify.
 - The 2026-09-10 live dry run included all four ending offerings. It reported
   5284 as `🟠 可考慮` at 18.83% discount, 4.08% dilution, and 14.75 percentage
   points of safety margin, while omitting the four requested LINE fields.
@@ -242,8 +249,9 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 
 ## Next Action
 
-Deploy TASK-028, then observe the next 12:30/13:00 production pair and verify
-successful LINE multicast, daily KV deduplication, and bounded subrequest use.
+Complete TASK-030 checks and deployment, then observe the next 12:30/13:00
+production pair. Verify source retry diagnostics, partial-result reevaluation,
+improvement-only update delivery, and bounded subrequest use.
 
 ## Loop Controls
 

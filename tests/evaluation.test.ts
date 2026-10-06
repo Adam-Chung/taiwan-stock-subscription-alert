@@ -42,7 +42,7 @@ vi.mock("../src/clients/mops-issuance.js", () => ({
     .mockRejectedValue(new Error("HTTP 503：https://example.test/path?token=private")),
 }));
 
-import { evaluateSubscriptionDate } from "../src/evaluation.js";
+import { evaluateSubscriptionDateResult } from "../src/evaluation.js";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -51,14 +51,16 @@ afterEach(() => {
 it("新增股數失敗時保留原股數並記錄安全化來源錯誤", async () => {
   const errorLog = vi.spyOn(console, "error").mockImplementation(() => undefined);
 
-  const message = await evaluateSubscriptionDate("2026-08-31", {
+  const result = await evaluateSubscriptionDateResult("2026-08-31", {
     policy: { minDiscountPercent: 20, minSafetyMarginPercent: 10 },
     issuanceOverrides: {},
     mopsFetchEnabled: true,
   });
 
-  expect(message).toContain("原已發行普通股數：24,904,477 股");
-  expect(message).toContain("本次新增股數：\n");
+  expect(result.message).toContain("原已發行普通股數：24,904,477 股");
+  expect(result.message).toContain("本次新增股數：\n");
+  expect(result.complete).toBe(false);
+  expect(result.incompleteCount).toBe(1);
   expect(errorLog).toHaveBeenCalledWith(
     JSON.stringify({
       event: "official_source_failed",

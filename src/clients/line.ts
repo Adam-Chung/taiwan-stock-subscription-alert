@@ -1,5 +1,20 @@
 import type { LineRecipient } from "../recipients.js";
 
+const LINE_MAX_ATTEMPTS = 2;
+
+class LineStatusError extends Error {
+  constructor(
+    readonly status: number,
+    readonly requestId: string | null,
+  ) {
+    super(
+      `LINE Multicast 失敗：HTTP ${status}${
+        requestId ? ` (requestId ${requestId})` : ""
+      }`,
+    );
+  }
+}
+
 export interface DeliveryOutcome {
   recipient: LineRecipient;
   status: "sent" | "failed";
@@ -15,26 +30,62 @@ export async function pushLineMulticastMessage(
   if (targets.length === 0 || targets.length > 500) {
     throw new Error("LINE multicast 收件者數量必須介於 1 與 500");
   }
-  const response = await fetch("https://api.line.me/v2/bot/message/multicast", {
-    method: "POST",
-    headers: {
-      authorization: `Bearer ${token}`,
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({
-      to: targets,
-      messages: [{ type: "text", text: message }],
-    }),
-    signal: AbortSignal.timeout(20_000),
-  });
-  if (!response.ok) {
-    const requestId = response.headers.get("x-line-request-id");
-    throw new Error(
-      `LINE Multicast 失敗：HTTP ${response.status}${
-        requestId ? ` (requestId ${requestId})` : ""
-      }`,
-    );
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= LINE_MAX_ATTEMPTS; attempt += 1) {
+    try {
+      const response = await fetch("https://api.line.me/v2/bot/message/multicast", {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${token}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          to: targets,
+          messages: [{ type: "text", text: message }],
+        }),
+        signal: AbortSignal.timeout(20_000),
+      });
+      if (!response.ok) {
+        throw new LineStatusError(
+          response.status,
+          response.headers.get("x-line-request-id"),
+        );
+      }
+      return;
+    } catch (error) {
+      lastError = error;
+      if (attempt === LINE_MAX_ATTEMPTS || !isRetryableLineError(error)) {
+        throw error;
+      }
+      console.warn(
+        JSON.stringify({
+          event: "line_delivery_retry",
+          nextAttempt: attempt + 1,
+          reason: lineErrorReason(error),
+        }),
+      );
+    }
   }
+  throw lastError;
+}
+
+/** 只重試可能自行恢復的 LINE 傳輸及伺服器錯誤；403 等權限錯誤交由備援排程。 */
+function isRetryableLineError(error: unknown): boolean {
+  if (!(error instanceof LineStatusError)) {
+    return error instanceof Error && !error.message.includes("Too many subrequests");
+  }
+  return (
+    error.status === 408 ||
+    error.status === 425 ||
+    error.status === 429 ||
+    (error.status >= 500 && error.status <= 599)
+  );
+}
+
+/** 建立不含 token、收件者及回應內容的 LINE 錯誤摘要。 */
+function lineErrorReason(error: unknown): string {
+  if (error instanceof LineStatusError) return `HTTP ${error.status}`;
+  return error instanceof Error ? error.name : "UnknownError";
 }
 
 export async function pushLineMessageToRecipients(

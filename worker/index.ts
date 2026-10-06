@@ -1,6 +1,9 @@
 import { pushLineMessageToRecipientsWithToken } from "../src/clients/line.js";
-import type { EvaluationOptions } from "../src/evaluation.js";
-import { evaluateSubscriptionDate } from "../src/evaluation.js";
+import type {
+  EvaluationOptions,
+  EvaluationResult,
+} from "../src/evaluation.js";
+import { evaluateSubscriptionDateResult } from "../src/evaluation.js";
 import { buildFailureMessage } from "../src/message.js";
 import { loadRecipients, type LineRecipient } from "../src/recipients.js";
 
@@ -23,7 +26,7 @@ interface WorkerDependencies {
   evaluate: (
     date: string,
     options: EvaluationOptions,
-  ) => Promise<string>;
+  ) => Promise<EvaluationResult>;
   deliver: (
     message: string,
     recipients: LineRecipient[],
@@ -32,7 +35,7 @@ interface WorkerDependencies {
 }
 
 export interface WorkerRunResult {
-  status: "sent" | "duplicate";
+  status: "sent" | "updated" | "duplicate" | "unchanged";
   date: string;
   sentCount: number;
 }
@@ -43,13 +46,15 @@ interface DailyDeliveryState {
     hash: string;
     sentAt: string;
   }>;
+  evaluationComplete?: boolean;
+  incompleteCount?: number;
 }
 
 const DEFAULT_LATEST_SEND_TIME = "13:15";
 const HISTORY_TTL_SECONDS = 120 * 24 * 60 * 60;
 
 const dependencies: WorkerDependencies = {
-  evaluate: evaluateSubscriptionDate,
+  evaluate: evaluateSubscriptionDateResult,
   deliver: pushLineMessageToRecipientsWithToken,
 };
 
@@ -97,13 +102,14 @@ export async function executeScheduledAlert(
   const pendingRecipients = recipients.filter(
     (recipient) => !deliveredHashes.has(recipient.hash),
   );
-  if (pendingRecipients.length === 0) {
+  const previousEvaluationWasPartial = deliveryState.evaluationComplete === false;
+  if (pendingRecipients.length === 0 && !previousEvaluationWasPartial) {
     return { status: "duplicate", date: taipei.date, sentCount: 0 };
   }
 
-  let message: string;
+  let evaluation: EvaluationResult;
   try {
-    message = await workerDependencies.evaluate(
+    evaluation = await workerDependencies.evaluate(
       taipei.date,
       evaluationOptions(env),
     );
@@ -118,9 +124,20 @@ export async function executeScheduledAlert(
     throw new Error(failureMessage, { cause: error });
   }
 
+  const improved = previousEvaluationWasPartial && (
+    evaluation.complete ||
+    evaluation.incompleteCount < (deliveryState.incompleteCount ?? Number.POSITIVE_INFINITY)
+  );
+  if (pendingRecipients.length === 0 && !improved) {
+    return { status: "unchanged", date: taipei.date, sentCount: 0 };
+  }
+  const recipientsToDeliver = improved ? recipients : pendingRecipients;
+  const message = improved
+    ? evaluation.message.replace("【台股申購提醒｜", "【台股申購提醒更新｜")
+    : evaluation.message;
   const outcomes = await workerDependencies.deliver(
     message,
-    pendingRecipients,
+    recipientsToDeliver,
     requiredValue(env.LINE_CHANNEL_ACCESS_TOKEN, "LINE_CHANNEL_ACCESS_TOKEN"),
   );
   const successes = outcomes
@@ -132,6 +149,7 @@ export async function executeScheduledAlert(
     successes,
     env.ALERT_HISTORY,
     now,
+    evaluation,
   );
 
   const failures = outcomes.filter((outcome) => outcome.status === "failed");
@@ -143,7 +161,11 @@ export async function executeScheduledAlert(
     );
   }
 
-  return { status: "sent", date: taipei.date, sentCount: successes.length };
+  return {
+    status: improved ? "updated" : "sent",
+    date: taipei.date,
+    sentCount: successes.length,
+  };
 }
 
 /** 建立 Worker 專用評估設定並驗證所有數值。 */
@@ -204,6 +226,7 @@ async function recordSuccessfulDeliveries(
   recipients: LineRecipient[],
   history: KVNamespace,
   now: Date,
+  evaluation: EvaluationResult,
 ): Promise<void> {
   if (recipients.length === 0) return;
   const merged = new Map(
@@ -218,7 +241,11 @@ async function recordSuccessfulDeliveries(
   }
   await history.put(
     historyKey(date),
-    JSON.stringify({ recipients: [...merged.values()] } satisfies DailyDeliveryState),
+    JSON.stringify({
+      recipients: [...merged.values()],
+      evaluationComplete: evaluation.complete,
+      incompleteCount: evaluation.incompleteCount,
+    } satisfies DailyDeliveryState),
     { expirationTtl: HISTORY_TTL_SECONDS },
   );
 }
@@ -227,6 +254,7 @@ async function recordSuccessfulDeliveries(
 function isDailyDeliveryState(value: unknown): value is DailyDeliveryState {
   if (!value || typeof value !== "object" || !("recipients" in value)) return false;
   const recipients = (value as { recipients?: unknown }).recipients;
+  const state = value as Record<string, unknown>;
   return (
     Array.isArray(recipients) &&
     recipients.every(
@@ -236,7 +264,13 @@ function isDailyDeliveryState(value: unknown): value is DailyDeliveryState {
         typeof (recipient as Record<string, unknown>).alias === "string" &&
         typeof (recipient as Record<string, unknown>).hash === "string" &&
         typeof (recipient as Record<string, unknown>).sentAt === "string",
-    )
+    ) &&
+    (state.evaluationComplete === undefined ||
+      typeof state.evaluationComplete === "boolean") &&
+    (state.incompleteCount === undefined ||
+      (typeof state.incompleteCount === "number" &&
+        Number.isInteger(state.incompleteCount) &&
+        state.incompleteCount >= 0))
   );
 }
 

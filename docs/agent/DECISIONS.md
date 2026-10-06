@@ -229,3 +229,24 @@
   Sunday is no longer scheduled.
 - Supersedes: The numeric day-of-week expressions recorded by DEC-011; its
   times, backup strategy, and deadline remain unchanged.
+
+## DEC-016: Reevaluate partial alerts and retry bounded same-URL redirects
+
+- Date: 2026-10-06
+- Status: accepted
+- Context: At 12:30, temporary official-source failures left 3260 and 7806
+  incomplete, while the 13:00 run could retrieve more data. The existing daily
+  success marker prevented a second evaluation after any successful delivery.
+- Decision: Save evaluation completeness and missing-case count with the daily
+  recipient hashes. Reevaluate a partial result at 13:00 and send an explicitly
+  titled update only when completeness improves. Retry HTTP 302 against the
+  original URL within the existing attempt limit, but never follow Location.
+  Retry transient LINE 408/425/429/5xx once; do not retry 403.
+- Reason: Temporary source or delivery failures should have a bounded second
+  chance before the deadline without causing duplicate unchanged messages or
+  bypassing source access controls.
+- Consequences: Partial days use one additional evaluation at 13:00. Safe logs
+  now retain exhausted attempt count and HTTP status, but never response bodies,
+  query parameters, tokens, or recipient identifiers.
+- Supersedes: DEC-014's rule that every 3xx is immediately non-retryable; manual
+  redirect handling and the prohibition on following redirects remain active.

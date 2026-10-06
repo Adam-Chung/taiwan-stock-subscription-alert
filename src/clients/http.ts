@@ -64,7 +64,17 @@ async function requestWithRetry<T>(
       return await request();
     } catch (error) {
       lastError = error;
-      if (attempt === maxAttempts || !isRetryable(error)) throw error;
+      if (attempt === maxAttempts || !isRetryable(error)) {
+        console.error(
+          JSON.stringify({
+            event: "official_source_exhausted",
+            host: new URL(url).host,
+            attempts: attempt,
+            reason: safeErrorReason(error),
+          }),
+        );
+        throw error;
+      }
       const retryAfterMs =
         error instanceof HttpStatusError ? error.retryAfterMs : undefined;
       console.warn(
@@ -99,6 +109,7 @@ function isRetryable(error: unknown): boolean {
     );
   }
   return (
+    error.status === 302 ||
     error.status === 408 ||
     error.status === 425 ||
     error.status === 429 ||
