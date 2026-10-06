@@ -1,11 +1,13 @@
 import type { LineRecipient } from "../recipients.js";
 
 const LINE_MAX_ATTEMPTS = 2;
+const LINE_ERROR_BODY_MAX_LENGTH = 1_000;
 
 class LineStatusError extends Error {
   constructor(
     readonly status: number,
     readonly requestId: string | null,
+    readonly responseBody: string,
   ) {
     super(
       `LINE Multicast 失敗：HTTP ${status}${
@@ -49,12 +51,14 @@ export async function pushLineMulticastMessage(
         throw new LineStatusError(
           response.status,
           response.headers.get("x-line-request-id"),
+          await safeLineResponseBody(response),
         );
       }
       return;
     } catch (error) {
       lastError = error;
       if (attempt === LINE_MAX_ATTEMPTS || !isRetryableLineError(error)) {
+        logFinalLineFailure(error, attempt);
         throw error;
       }
       console.warn(
@@ -67,6 +71,42 @@ export async function pushLineMulticastMessage(
     }
   }
   throw lastError;
+}
+
+/** 讀取並清理 LINE 錯誤本文，保留診斷訊息但不記錄憑證或收件者 ID。 */
+async function safeLineResponseBody(response: Response): Promise<string> {
+  let body: string;
+  try {
+    body = await response.text();
+  } catch {
+    return "[unreadable]";
+  }
+  if (!body) return "[empty]";
+  return body
+    .replace(
+      /("?(?:token|secret|authorization|userId|user_id)"?\s*[:=]\s*")([^"]+)(")/gi,
+      "$1[redacted]$3",
+    )
+    .replace(/\bU[a-fA-F0-9]{32}\b/g, "[redacted-line-user-id]")
+    .slice(0, LINE_ERROR_BODY_MAX_LENGTH);
+}
+
+/** 將最終 LINE 失敗寫入不含 token 與原始收件者 ID 的結構化日誌。 */
+function logFinalLineFailure(error: unknown, attempts: number): void {
+  console.error(
+    JSON.stringify({
+      event: "line_delivery_failed",
+      attempts,
+      reason: lineErrorReason(error),
+      ...(error instanceof LineStatusError
+        ? {
+            status: error.status,
+            ...(error.requestId ? { requestId: error.requestId } : {}),
+            responseBody: error.responseBody,
+          }
+        : {}),
+    }),
+  );
 }
 
 /** 只重試可能自行恢復的 LINE 傳輸及伺服器錯誤；403 等權限錯誤交由備援排程。 */

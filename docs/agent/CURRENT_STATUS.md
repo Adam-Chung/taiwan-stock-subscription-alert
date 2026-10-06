@@ -127,8 +127,9 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
   Explicit access denial such as HTTP 403 is not retried.
 - Source retries and final failures emit structured privacy-safe logs with only
   date, public stock code, source category, host, attempt, and sanitized reason.
-  LINE credentials, recipient IDs, query parameters, and response bodies are
-  excluded.
+  Final LINE failures additionally retain status, request ID, attempt count,
+  and up to 1,000 characters of sanitized response body. LINE credentials,
+  original recipient IDs, and query parameters remain excluded.
 - The 2026-08-31 live diagnostic resolved 6967 with 24,904,477 original shares
   and 5,500,000 new shares. The new regression test preserves original shares
   when the new-share lookup ultimately fails.
@@ -209,6 +210,9 @@ Build and publish a zero-monthly-cost Taiwan stock subscription LINE alert.
 - `npm run check`: Worker bundle and 15 test files / 66 tests passed for
   same-URL 302 retries, parenthetical MOPS share wording, transient LINE
   retries, source-exhaustion diagnostics, and improvement-only backup updates.
+- `npm run check`: Worker bundle and 15 test files / 66 tests passed after LINE
+  failure logs began retaining bounded, sanitized response bodies. The test
+  verifies Authorization values and LINE user IDs are redacted.
 - A 2026-10-06 live dry run reported zero incomplete cases. It resolved 3260
   with industry 24, 336,463,418 original shares, and 20,000,000 new shares;
   7806 completed evaluation and was omitted only because it did not qualify.

@@ -246,7 +246,8 @@
   chance before the deadline without causing duplicate unchanged messages or
   bypassing source access controls.
 - Consequences: Partial days use one additional evaluation at 13:00. Safe logs
-  now retain exhausted attempt count and HTTP status, but never response bodies,
-  query parameters, tokens, or recipient identifiers.
+  retain exhausted attempt count and HTTP status. Final LINE failures also
+  retain at most 1,000 characters of sanitized response body; query parameters,
+  tokens, and original recipient identifiers remain excluded.
 - Supersedes: DEC-014's rule that every 3xx is immediately non-retryable; manual
   redirect handling and the prohibition on following redirects remain active.

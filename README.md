@@ -355,8 +355,10 @@ GitHub 手動執行仍沿用 `data/run-history.json`；它與 Cloudflare KV 是�
   redirect chain 耗盡每次 invocation 的 subrequest 額度。302 只有限重試
   原網址，其他 3xx 會當成該來源
   失敗並保留其他已取得資料；「Too many subrequests」不做無效重試。
-- 最終失敗會記錄日期、股票代號、來源類型與安全化錯誤摘要，不記錄 LINE
-  token、收件者 ID、URL 查詢參數或外部回應內容。Cloudflare Logs 可用
+- 官方資料來源的最終失敗會記錄日期、股票代號、來源類型與安全化錯誤摘要。
+  LINE 最終失敗另記錄 HTTP 狀態、request ID、嘗試次數，以及最多 1,000 字元
+  的清理後 response body。所有日誌都不記錄 LINE token、原始收件者 ID 或
+  URL 查詢參數。Cloudflare Logs 可用
   `official_source_retry` 與 `official_source_failed` 事件篩選問題來源。
 - MOPS 頁面或公告文字格式若改版，可能暫時無法解析完整新增股數；此時
   會標示發行資料不足，不會以公開申購股數冒充完整發行股數。

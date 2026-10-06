@@ -33,17 +33,26 @@ describe("pushLineMessageToRecipients", () => {
     expect(outcomes.map(({ status }) => status)).toEqual(["sent", "sent"]);
   });
 
-  it("multicast 失敗時整批保留給備援重試且不記錄回應內容", async () => {
+  it("multicast 失敗時記錄清理後的 response body 並保留整批給備援", async () => {
     process.env.LINE_CHANNEL_ACCESS_TOKEN = "test-token";
+    const lineUserId = `U${"a".repeat(32)}`;
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(
-        new Response("U-sensitive", {
-          status: 403,
-          headers: { "x-line-request-id": "request-123" },
-        }),
+        new Response(
+          JSON.stringify({
+            message: "Authentication failed",
+            userId: lineUserId,
+            authorization: "Bearer secret-value",
+          }),
+          {
+            status: 403,
+            headers: { "x-line-request-id": "request-123" },
+          },
+        ),
       ),
     );
+    const errorLog = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const recipients = [
       { alias: "One", targetId: "U-1", hash: hashRecipientId("U-1") },
       { alias: "Two", targetId: "U-2", hash: hashRecipientId("U-2") },
@@ -54,7 +63,19 @@ describe("pushLineMessageToRecipients", () => {
     expect(outcomes.map(({ status }) => status)).toEqual(["failed", "failed"]);
     expect(outcomes[0]?.error).toContain("HTTP 403");
     expect(outcomes[0]?.error).toContain("request-123");
-    expect(outcomes[0]?.error).not.toContain("U-sensitive");
+    expect(errorLog).toHaveBeenCalledWith(
+      JSON.stringify({
+        event: "line_delivery_failed",
+        attempts: 1,
+        reason: "HTTP 403",
+        status: 403,
+        requestId: "request-123",
+        responseBody:
+          '{"message":"Authentication failed","userId":"[redacted]","authorization":"[redacted]"}',
+      }),
+    );
+    expect(errorLog.mock.calls.flat().join(" ")).not.toContain(lineUserId);
+    expect(errorLog.mock.calls.flat().join(" ")).not.toContain("secret-value");
   });
 
   it("LINE 429 時在同次執行有限重試後成功", async () => {
